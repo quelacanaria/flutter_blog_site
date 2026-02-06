@@ -1,0 +1,2 @@
+1. flutter pub add supabase_flutter
+2. flutter pub add flutter_dotenv
