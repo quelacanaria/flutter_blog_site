@@ -21,7 +21,7 @@ class AuthService {
     return await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {name: name},
+      data: {'name': name},
     );
   }
 
@@ -35,13 +35,18 @@ class AuthService {
 
     if (user == null) return null;
 
-    return UserData(email: user.email, name: user.userMetadata?['name']);
+    return UserData(
+      email: user.email,
+      name: user.userMetadata?['name'],
+      id: user.id,
+    );
   }
 }
 
 class UserData {
   final String? email;
   final String? name;
+  final String? id;
 
-  UserData({this.email, this.name});
+  UserData({this.email, this.name, this.id});
 }
