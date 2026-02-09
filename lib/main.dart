@@ -28,7 +28,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: Supabase.instance.client.auth.currentUser != null
+          ? '/dashboard_page'
+          : '/',
       routes: {
         '/': (context) => LoginPage(),
         '/createAccount_page': (context) => const RegisterPage(),

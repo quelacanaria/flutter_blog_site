@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/auth/auth_service.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
+import 'package:flutter_blog_site/utils/storage_service.dart';
+import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,22 +17,20 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final authService = AuthService();
+  final StorageService _storageService = StorageService();
+  final UserphotoDatabaseService _userphotoDatabaseService =
+      UserphotoDatabaseService();
   UserData? currentUser;
-  String? imageUrl1;
+  String? imageUserUrl;
   File? _imageFile;
   bool _isUploading = false;
   final SupabaseClient supabase = Supabase.instance.client;
 
   Future<void> fetchProfileImage() async {
     try {
-      final res = await supabase
-          .from('userphoto')
-          .select('image')
-          .eq('user_id', supabase.auth.currentUser!.id)
-          .single();
-
+      final res = await _userphotoDatabaseService.viewSingleUserPhoto();
       setState(() {
-        imageUrl1 = res['image'];
+        imageUserUrl = res['image'];
       });
     } on PostgrestException catch (e) {
       if (mounted) {
@@ -60,59 +60,19 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  Future remove() async {
-    try {
-      final res = await supabase
-          .from('userphoto')
-          .select('image')
-          .eq('user_id', supabase.auth.currentUser!.id)
-          .single();
-      final fileName = res['image'];
-      final parts = fileName.toString().split('/postsImages/');
-      final filePath = parts[1];
-      await supabase.storage.from('postsImages').remove([filePath]);
-    } on StorageException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
-      }
-    } on PostgrestException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
-      }
-    }
-  }
-
   Future uploadProfileImage() async {
     if (_imageFile == null || _isUploading) return;
     setState(() {
       _isUploading = true;
     });
 
-    // final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    final ext = _imageFile!.path.split('.').last;
-    final fileName =
-        '${supabase.auth.currentUser!.id}-${DateTime.now().millisecondsSinceEpoch}.$ext';
-
     try {
-      await supabase.storage.from('postsImages').upload(fileName, _imageFile!);
-      final imageUrl = Supabase.instance.client.storage
-          .from('postsImages')
-          .getPublicUrl(fileName);
-      if (imageUrl1 != null) {
-        remove();
-        await supabase
-            .from('userphoto')
-            .update({'image': imageUrl})
-            .eq('user_id', supabase.auth.currentUser!.id);
+      final imageUrl = await _storageService.uploadUserImage(_imageFile!);
+      if (imageUserUrl != null) {
+        await _storageService.removeUserImage();
+        await _userphotoDatabaseService.updateUserPhoto(imageUrl);
       } else {
-        await supabase.from('userphoto').insert({
-          'image': imageUrl,
-          'user_id': supabase.auth.currentUser!.id,
-        });
+        await _userphotoDatabaseService.uploadUserPhoto(imageUrl);
       }
 
       if (mounted) {
@@ -133,6 +93,25 @@ class _SettingsPageState extends State<SettingsPage> {
           context,
         ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
       }
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
+  }
+
+  Future deleteUserDatabaseImage() async {
+    try {
+      await _storageService.removeUserImage();
+      await _userphotoDatabaseService.deleteUserPhoto();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('successfully deleted')));
+        Navigator.pushReplacementNamed(context, '/settings_page');
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -161,22 +140,47 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                       )
-                    : CircleAvatar(
-                        radius: 120,
-                        child: SizedBox(
-                          height: 200,
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: ClipOval(
-                              child: imageUrl1 != null
-                                  ? Image.network(imageUrl1!, height: 200)
-                                  : Image.asset(
-                                      'assets/images/changePic.jpg',
-                                      height: 200,
-                                    ),
+                    : Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 120,
+                            child: SizedBox(
+                              height: 200,
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: ClipOval(
+                                  child: imageUserUrl != null
+                                      ? Image.network(
+                                          imageUserUrl!,
+                                          height: 200,
+                                        )
+                                      : Icon(Icons.person, size: 200),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          if (imageUserUrl != null)
+                            Positioned(
+                              right: 60,
+                              top: 20,
+                              child: GestureDetector(
+                                onTap: deleteUserDatabaseImage,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: EdgeInsets.all(6),
+                                  child: Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
               SizedBox(height: 10),
               _imageFile != null
@@ -200,8 +204,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             _imageFile = null;
                           }),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.indigo,
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.zero,
                             ),
