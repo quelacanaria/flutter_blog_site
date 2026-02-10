@@ -5,7 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class StorageServicePost {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  Future uploadPostImage(final File file) async {
+  Future uploadPostImage(final File? file) async {
+    if (file == null) return null;
     final ext = file.path.split('.').last;
     final fileName =
         '${supabase.auth.currentUser!.id}-${DateTime.now().millisecondsSinceEpoch}.$ext';
@@ -20,12 +21,12 @@ class StorageServicePost {
     }
   }
 
-  Future deletePostImage() async {
+  Future deleteStoragePostImage(final String postId) async {
     try {
       final res = await supabase
           .from('posts')
           .select()
-          .eq('user_id', supabase.auth.currentUser!.id)
+          .eq('id', postId)
           .single();
       final fileName = res['image'];
       final filePath = fileName.toString().split('/postsImages/')[1];

@@ -4,7 +4,8 @@ import 'package:flutter_blog_site/pages/posts/create_posts.dart';
 import 'package:flutter_blog_site/pages/posts/delete_posts.dart';
 import 'package:flutter_blog_site/pages/posts/private_posts.dart';
 import 'package:flutter_blog_site/pages/posts/update_posts.dart';
-import 'package:flutter_blog_site/pages/posts/view_posts.dart';
+import 'package:flutter_blog_site/pages/posts/view_all_posts.dart';
+import 'package:flutter_blog_site/pages/posts/view_single_post.dart';
 import 'package:flutter_blog_site/pages/profile_page.dart';
 import 'package:flutter_blog_site/pages/register_page.dart';
 import 'package:flutter_blog_site/pages/settings_page.dart';
@@ -38,9 +39,10 @@ class MyApp extends StatelessWidget {
         '/createPosts_page': (context) => const CreatePosts(),
         '/deletePosts_page': (context) => const DeletePosts(),
         '/updatePosts_page': (context) => const UpdatePosts(),
-        '/viewPosts_page': (context) => const ViewPosts(),
+        '/viewPosts_page': (context) => const ViewPosts(), //view all post
         '/settings_page': (context) => const SettingsPage(),
         '/privatePosts_page': (context) => const PrivatePosts(),
+        '/viewSinglePost_page': (context) => const ViewSinglePost(),
       },
     );
   }

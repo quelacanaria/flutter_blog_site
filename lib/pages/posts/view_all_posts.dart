@@ -3,22 +3,22 @@ import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class PrivatePosts extends StatefulWidget {
-  const PrivatePosts({super.key});
+class ViewPosts extends StatefulWidget {
+  const ViewPosts({super.key});
 
   @override
-  State<PrivatePosts> createState() => _PrivatePostsState();
+  State<ViewPosts> createState() => _ViewPostsState();
 }
 
-class _PrivatePostsState extends State<PrivatePosts> {
+class _ViewPostsState extends State<ViewPosts> {
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
   List<Map<String, dynamic>> posts = [];
   final SupabaseClient supabase = Supabase.instance.client;
   bool isLoading = true;
   String? postData;
-  Future fetchPrivatePosts() async {
+  Future fetchPosts() async {
     try {
-      final data = await _postDatabaseService.viewAllPrivatePosts();
+      final data = await _postDatabaseService.viewAllPosts();
       setState(() {
         posts = data;
         isLoading = false;
@@ -35,7 +35,7 @@ class _PrivatePostsState extends State<PrivatePosts> {
   void initState() {
     super.initState();
     setState(() {
-      fetchPrivatePosts();
+      fetchPosts();
     });
   }
 
@@ -59,9 +59,9 @@ class _PrivatePostsState extends State<PrivatePosts> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'View All Private Posts',
+                    'View All Posts',
                     style: TextStyle(
-                      color: Colors.red,
+                      color: Colors.indigo,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -136,7 +136,7 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                             arguments: post,
                                           );
                                           if (res == true) {
-                                            fetchPrivatePosts();
+                                            fetchPosts();
                                           }
                                         }
 
@@ -147,7 +147,7 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                             arguments: post,
                                           );
                                           if (res == true) {
-                                            fetchPrivatePosts();
+                                            fetchPosts();
                                           }
                                         }
                                       },

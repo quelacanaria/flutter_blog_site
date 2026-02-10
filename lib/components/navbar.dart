@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/auth/auth_service.dart';
 import 'package:flutter_blog_site/pages/posts/create_posts.dart';
-import 'package:flutter_blog_site/pages/posts/view_posts.dart';
+import 'package:flutter_blog_site/pages/posts/view_all_posts.dart';
 import 'package:flutter_blog_site/pages/profile_page.dart';
 
 class Navbar extends StatefulWidget implements PreferredSizeWidget {
@@ -36,6 +36,7 @@ class _NavbarState extends State<Navbar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       title: const Text(
         'Blog Site',
         style: TextStyle(fontWeight: FontWeight.bold),

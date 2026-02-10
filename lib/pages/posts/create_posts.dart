@@ -46,8 +46,23 @@ class _CreatePostsState extends State<CreatePosts> {
     final title = _titleController.text;
     final description = _descriptionController.text;
     try {
-      final res = await _storageServicePost.uploadPostImage(_imageFile!);
-      await _postDatabaseService.uploadPosts(public, res, title, description);
+      if (title.trim() == '' || description.trim() == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Title and Description is required!!')),
+        );
+        return;
+      }
+      if (_imageFile != null) {
+        final res = await _storageServicePost.uploadPostImage(_imageFile!);
+        await _postDatabaseService.uploadPosts(public, res, title, description);
+      } else {
+        await _postDatabaseService.uploadPosts(
+          public,
+          null,
+          title,
+          description,
+        );
+      }
       _titleController.clear();
       _descriptionController.clear();
       _imageFile = null;
