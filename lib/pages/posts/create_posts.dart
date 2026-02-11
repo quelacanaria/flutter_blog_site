@@ -189,12 +189,12 @@ class _CreatePostsState extends State<CreatePosts> {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: createPosts,
-              child: Text('Create'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
               ),
+              child: Text('Create'),
             ),
           ],
         ),

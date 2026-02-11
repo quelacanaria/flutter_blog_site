@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
+import 'package:flutter_blog_site/utils/comment_database_service.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
 
@@ -11,6 +12,8 @@ class DeletePosts extends StatefulWidget {
 }
 
 class _DeletePostsState extends State<DeletePosts> {
+  final CommentDatabaseService _commentDatabaseService =
+      CommentDatabaseService();
   final StorageServicePost _storageServicePost = StorageServicePost();
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
   String? _title;
@@ -37,6 +40,12 @@ class _DeletePostsState extends State<DeletePosts> {
 
   Future deletePost() async {
     try {
+      await _storageServicePost.deleteStorageAllCommentImageInASinglePost(
+        _postId!,
+      );
+      await _commentDatabaseService.databaseDeleteAllCommentInASinglePost(
+        _postId!,
+      );
       await _storageServicePost.deleteStoragePostImage(_postId!);
       await _postDatabaseService.deleteDatabaseSinglePost(_postId!);
       if (mounted) {
