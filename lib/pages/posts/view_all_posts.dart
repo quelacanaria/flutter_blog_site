@@ -46,27 +46,35 @@ class _ViewPostsState extends State<ViewPosts> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            elevation: 3,
-            child: Padding(
-              padding: EdgeInsets.all(12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'View All Posts',
-                    style: TextStyle(
-                      color: Colors.indigo,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 700),
+              child: Card(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 3,
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'View All Posts',
+                        style: TextStyle(
+                          color: Colors.indigo,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -81,129 +89,147 @@ class _ViewPostsState extends State<ViewPosts> {
                     itemBuilder: (context, index) {
                       final post = posts[index];
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 700),
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            elevation: 3,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const CircleAvatar(
-                                    radius: 18,
-                                    child: Icon(Icons.person),
+                                  Row(
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 18,
+                                        child: Icon(Icons.person),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        post['author'] ?? 'Unknown',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      if (post['user_id'] ==
+                                          supabase.auth.currentUser!.id)
+                                        PopupMenuButton<int>(
+                                          offset: const Offset(0, 50),
+                                          icon: const CircleAvatar(
+                                            radius: 18,
+                                            child: Icon(Icons.more_vert),
+                                          ),
+                                          itemBuilder: (context) => [
+                                            PopupMenuItem(
+                                              value: 0,
+                                              child: const Text('Edit'),
+                                            ),
+                                            PopupMenuItem(
+                                              value: 1,
+                                              child: const Text('Delete'),
+                                            ),
+                                          ],
+                                          onSelected: (value) async {
+                                            if (value == 0) {
+                                              final res =
+                                                  await Navigator.pushNamed(
+                                                    context,
+                                                    '/updatePosts_page',
+                                                    arguments: post,
+                                                  );
+                                              if (res == true) {
+                                                fetchPosts();
+                                              }
+                                            }
+
+                                            if (value == 1) {
+                                              final res =
+                                                  await Navigator.pushNamed(
+                                                    context,
+                                                    '/deletePosts_page',
+                                                    arguments: post,
+                                                  );
+                                              if (res == true) {
+                                                fetchPosts();
+                                              }
+                                            }
+                                          },
+                                        ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 10),
+
+                                  const SizedBox(height: 12),
                                   Text(
-                                    post['author'] ?? 'Unknown',
+                                    post['title'] ?? '',
                                     style: const TextStyle(
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 16,
                                     ),
                                   ),
-                                  const Spacer(),
-                                  if (post['user_id'] ==
-                                      supabase.auth.currentUser!.id)
-                                    PopupMenuButton<int>(
-                                      offset: const Offset(0, 50),
-                                      icon: const CircleAvatar(
-                                        radius: 18,
-                                        child: Icon(Icons.more_vert),
-                                      ),
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          value: 0,
-                                          child: const Text('Edit'),
+
+                                  const SizedBox(height: 8),
+                                  if (post['image'] != null)
+                                    Center(
+                                      child: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          minHeight: 200,
+                                          maxHeight: 300,
                                         ),
-                                        PopupMenuItem(
-                                          value: 1,
-                                          child: const Text('Delete'),
+                                        child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: NetworkImage(
+                                                  post['image'],
+                                                ),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    post['description'] ?? '',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+
+                                  const SizedBox(height: 12),
+                                  GestureDetector(
+                                    onTap: () => Navigator.pushNamed(
+                                      context,
+                                      '/viewSinglePost_page',
+                                      arguments: post,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: const [
+                                            Icon(Icons.comment_outlined),
+                                            SizedBox(width: 6),
+                                            Text("Comment"),
+                                          ],
                                         ),
                                       ],
-                                      onSelected: (value) async {
-                                        if (value == 0) {
-                                          final res = await Navigator.pushNamed(
-                                            context,
-                                            '/updatePosts_page',
-                                            arguments: post,
-                                          );
-                                          if (res == true) {
-                                            fetchPosts();
-                                          }
-                                        }
-
-                                        if (value == 1) {
-                                          final res = await Navigator.pushNamed(
-                                            context,
-                                            '/deletePosts_page',
-                                            arguments: post,
-                                          );
-                                          if (res == true) {
-                                            fetchPosts();
-                                          }
-                                        }
-                                      },
                                     ),
+                                  ),
                                 ],
                               ),
-
-                              const SizedBox(height: 12),
-                              Text(
-                                post['title'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-
-                              const SizedBox(height: 8),
-                              if (post['image'] != null)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    post['image'],
-                                    width: double.infinity,
-                                    height: 200,
-                                    fit: BoxFit.fill,
-                                  ),
-                                ),
-
-                              const SizedBox(height: 10),
-                              Text(
-                                post['description'] ?? '',
-                                style: const TextStyle(fontSize: 14),
-                              ),
-
-                              const SizedBox(height: 12),
-                              GestureDetector(
-                                onTap: () => Navigator.pushNamed(
-                                  context,
-                                  '/viewSinglePost_page',
-                                  arguments: post,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: const [
-                                        Icon(Icons.comment_outlined),
-                                        SizedBox(width: 6),
-                                        Text("Comment"),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       );

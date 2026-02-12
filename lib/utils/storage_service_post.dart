@@ -1,23 +1,33 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StorageServicePost {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  Future uploadPostImage(final File? file) async {
-    if (file == null) return null;
-    final ext = file.path.split('.').last;
-    final fileName =
-        '${supabase.auth.currentUser!.id}-${DateTime.now().millisecondsSinceEpoch}.$ext';
+  Future<String?> uploadPostImage({File? file, Uint8List? bytes}) async {
+    if (file == null && bytes == null) return null;
+    final userId = supabase.auth.currentUser!.id;
+    final timeStamp = DateTime.now().millisecondsSinceEpoch;
+
+    final fileName = '$userId-$timeStamp.png';
     try {
-      await supabase.storage.from('postsImages').upload(fileName, file!);
+      if (bytes != null) {
+        await supabase.storage
+            .from('postsImages')
+            .uploadBinary(fileName, bytes);
+      } else {
+        await supabase.storage.from('postsImages').upload(fileName, file!);
+      }
+
       final imageUrl = supabase.storage
           .from('postsImages')
           .getPublicUrl(fileName);
       return imageUrl;
     } catch (e) {
       print(e);
+      return null;
     }
   }
 

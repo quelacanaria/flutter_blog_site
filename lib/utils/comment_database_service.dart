@@ -38,7 +38,7 @@ class CommentDatabaseService {
 
   Future databaseUpdateComments(
     final String comment,
-    final String imageUrl,
+    final String? imageUrl,
     final String commentId,
   ) async {
     try {
@@ -54,6 +54,22 @@ class CommentDatabaseService {
             .update({'comment': comment})
             .eq('id', commentId);
       }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future databaseUpdateDeleteImageComments(
+    final String comment,
+    final String? imageUrl,
+    final String commentId,
+  ) async {
+    try {
+      await supabase
+          .from('comments')
+          .update({'comment': comment, 'image': imageUrl})
+          .eq('id', commentId);
+      // ignore: dead_code
     } catch (e) {
       print(e);
     }

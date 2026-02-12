@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
@@ -22,6 +23,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
   String? _databasePostImageUrl;
   String? _author;
   File? _imageFile;
+  Uint8List? _imageFileWeb;
   bool _isUpdating = false;
   String? _postId;
 
@@ -30,9 +32,18 @@ class _UpdatePostsState extends State<UpdatePosts> {
     try {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        setState(() {
-          _imageFile = File(image.path);
-        });
+        if (kIsWeb) {
+          final bytes = await image.readAsBytes();
+          setState(() {
+            _imageFile = null;
+            _imageFileWeb = bytes;
+          });
+        } else {
+          setState(() {
+            _imageFileWeb = null;
+            _imageFile = File(image.path);
+          });
+        }
       }
     } catch (e) {
       print(e);
@@ -75,19 +86,38 @@ class _UpdatePostsState extends State<UpdatePosts> {
         return;
       }
       await _storageServicePost.deleteStoragePostImage(_postId!);
-      final res = await _storageServicePost.uploadPostImage(_imageFile);
-      await _postDatabaseService.updatePost(
-        public!,
-        res,
-        title,
-        description,
-        _postId!,
-      );
-      if (res != null) {
-        setState(() {
-          _databasePostImageUrl = res;
-          _imageFile = null;
-        });
+      if (_imageFile != null) {
+        final res = await _storageServicePost.uploadPostImage(file: _imageFile);
+        await _postDatabaseService.updatePost(
+          public!,
+          res,
+          title,
+          description,
+          _postId!,
+        );
+        if (res != null) {
+          setState(() {
+            _databasePostImageUrl = res;
+            _imageFile = null;
+          });
+        }
+      } else {
+        final res = await _storageServicePost.uploadPostImage(
+          bytes: _imageFileWeb,
+        );
+        await _postDatabaseService.updatePost(
+          public!,
+          res,
+          title,
+          description,
+          _postId!,
+        );
+        if (res != null) {
+          setState(() {
+            _databasePostImageUrl = res;
+            _imageFileWeb = null;
+          });
+        }
       }
       if (mounted) {
         ScaffoldMessenger.of(
@@ -126,222 +156,314 @@ class _UpdatePostsState extends State<UpdatePosts> {
       appBar: const Navbar(),
       body: Center(
         child: SingleChildScrollView(
-          child: Card(
-            margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(radius: 25, child: Icon(Icons.person)),
-                      const SizedBox(width: 20),
-                      Text(
-                        _author ?? '',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 10),
-                  RadioListTile<String>(
-                    title: Text('public'),
-                    value: 'public',
-                    groupValue: _public,
-                    onChanged: (value) {
-                      setState(() {
-                        _public = value;
-                      });
-                    },
-                  ),
-                  RadioListTile<String>(
-                    title: Text('Private'),
-                    value: 'private',
-                    groupValue: _public,
-                    onChanged: (value) {
-                      setState(() {
-                        _public = value;
-                      });
-                    },
-                  ),
-                  const Text(
-                    'Image: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  if (_databasePostImageUrl != null) ...[
-                    if (_imageFile != null) ...[
-                      Stack(
-                        alignment: Alignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(height: 10),
-                          Image.file(_imageFile!, height: 400),
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: GestureDetector(
-                              onTap: () => {
-                                setState(() {
-                                  _imageFile = null;
-                                }),
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.6),
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: EdgeInsets.all(6),
-                                child: Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else ...[
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(height: 10),
-                          Image.network(_databasePostImageUrl!, height: 400),
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: GestureDetector(
-                              onTap: deletePostImage,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: EdgeInsets.all(6),
-                                child: Icon(
-                                  Icons.delete,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ] else ...[
-                    _imageFile != null
-                        ? Stack(
-                            alignment: Alignment.center,
+                          Row(
                             children: [
+                              const CircleAvatar(
+                                radius: 25,
+                                child: Icon(Icons.person),
+                              ),
+                              const SizedBox(width: 20),
+                              Text(
+                                _author ?? '',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 25,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 10),
+                          RadioListTile<String>(
+                            title: Text('public'),
+                            value: 'public',
+                            groupValue: _public,
+                            onChanged: (value) {
+                              setState(() {
+                                _public = value;
+                              });
+                            },
+                          ),
+                          RadioListTile<String>(
+                            title: Text('Private'),
+                            value: 'private',
+                            groupValue: _public,
+                            onChanged: (value) {
+                              setState(() {
+                                _public = value;
+                              });
+                            },
+                          ),
+                          const Text(
+                            'Image: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          if (_databasePostImageUrl != null) ...[
+                            if (_imageFile != null) ...[
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Image.file(_imageFile!, height: 400),
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: GestureDetector(
+                                      onTap: () => {
+                                        setState(() {
+                                          _imageFile = null;
+                                        }),
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.6),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                               SizedBox(height: 10),
-                              Image.file(_imageFile!, height: 400),
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: GestureDetector(
-                                  onTap: () => {
-                                    setState(() {
-                                      _imageFile = null;
-                                    }),
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.6),
-                                      shape: BoxShape.circle,
+                            ] else if (_imageFileWeb != null) ...[
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Image.memory(_imageFileWeb!, height: 400),
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: GestureDetector(
+                                      onTap: () => {
+                                        setState(() {
+                                          _imageFileWeb = null;
+                                        }),
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.6),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
                                     ),
-                                    padding: EdgeInsets.all(6),
-                                    child: Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 20,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                            ] else ...[
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Image.network(
+                                    _databasePostImageUrl!,
+                                    height: 400,
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: GestureDetector(
+                                      onTap: deletePostImage,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.delete,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
                                     ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                            ],
+                          ] else ...[
+                            if (_imageFile != null) ...[
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Image.file(_imageFile!, height: 400),
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: GestureDetector(
+                                      onTap: () => {
+                                        setState(() {
+                                          _imageFile = null;
+                                        }),
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.6),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                            ] else if (_imageFileWeb != null) ...[
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(height: 10),
+                                  Image.memory(_imageFileWeb!, height: 400),
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: GestureDetector(
+                                      onTap: () => {
+                                        setState(() {
+                                          _imageFileWeb = null;
+                                        }),
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.6),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                            ] else ...[
+                              SizedBox(height: 10),
+                              Text('No Image Uploaded'),
+                              SizedBox(height: 10),
+                            ],
+                          ],
+                          ElevatedButton(
+                            onPressed: pickImage,
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.indigo,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.zero,
+                              ),
+                            ),
+                            child: Text('Choose Photo'),
+                          ),
+                          const Text(
+                            'Title: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            controller: _titleController,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.zero,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          const Text(
+                            'Description: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 10),
+                          TextField(
+                            controller: _descriptionController,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.zero,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text('Cancel'),
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.indigo,
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.zero,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 20),
+                              ElevatedButton(
+                                onPressed: updatePost,
+                                child: Text('Update'),
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.indigo,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.zero,
                                   ),
                                 ),
                               ),
                             ],
-                          )
-                        : Text('No Image Uploaded'),
-                  ],
-                  ElevatedButton(
-                    onPressed: pickImage,
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.indigo,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero,
-                      ),
-                    ),
-                    child: Text('Choose Photo'),
-                  ),
-                  const Text(
-                    'Title: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  TextField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  const Text(
-                    'Description: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  TextField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.zero,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: Text('Cancel'),
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.indigo,
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.zero,
                           ),
-                        ),
+                          SizedBox(height: 10),
+                        ],
                       ),
-                      SizedBox(width: 20),
-                      ElevatedButton(
-                        onPressed: updatePost,
-                        child: Text('Update'),
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.indigo,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.zero,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  SizedBox(height: 10),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
