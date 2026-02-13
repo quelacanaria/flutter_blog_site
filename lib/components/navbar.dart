@@ -3,6 +3,7 @@ import 'package:flutter_blog_site/auth/auth_service.dart';
 import 'package:flutter_blog_site/pages/posts/create_posts.dart';
 import 'package:flutter_blog_site/pages/posts/view_all_posts.dart';
 import 'package:flutter_blog_site/pages/profile_page.dart';
+import 'package:go_router/go_router.dart';
 
 class Navbar extends StatefulWidget implements PreferredSizeWidget {
   const Navbar({super.key});
@@ -28,9 +29,6 @@ class _NavbarState extends State<Navbar> {
     setState(() {
       currentUser = null;
     });
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-    }
   }
 
   @override
@@ -46,11 +44,7 @@ class _NavbarState extends State<Navbar> {
       actions: [
         if (currentUser != null) ...[
           IconButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/dashboard_page',
-              (route) => false,
-            ),
+            onPressed: () => context.pushReplacement('/dashboard_page'),
             icon: const CircleAvatar(
               radius: 18,
               backgroundColor: Colors.white,
@@ -59,11 +53,7 @@ class _NavbarState extends State<Navbar> {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/viewPosts_page',
-              (route) => false,
-            ),
+            onPressed: () => context.pushReplacement('/viewPosts_page'),
             icon: CircleAvatar(
               backgroundColor: Colors.white,
               foregroundColor: Colors.indigo,
@@ -71,11 +61,7 @@ class _NavbarState extends State<Navbar> {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/createPosts_page',
-              (route) => false,
-            ),
+            onPressed: () => context.pushReplacement('/createPosts_page'),
             icon: const CircleAvatar(
               radius: 18,
               backgroundColor: Colors.white,
@@ -116,13 +102,7 @@ class _NavbarState extends State<Navbar> {
               if (value == 0)
                 {}
               else if (value == 1)
-                {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/settings_page',
-                    (route) => false,
-                  ),
-                }
+                {context.pushReplacement('/settings_page')}
               else if (value == 2)
                 {logout()}
               else

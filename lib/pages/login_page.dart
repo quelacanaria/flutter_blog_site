@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/auth/auth_service.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/pages/register_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
@@ -13,7 +14,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final authService = AuthService();
-
+  UserData? currentUser;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -23,19 +24,15 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       await authService.signInWithEmailPassword(email, password);
-      if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard_page',
-          (route) => false,
-        );
-      }
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+        context.pushReplacement('/dashboard_page');
       }
+    } catch (e) {
+      context.pushReplacement('/dashboard_page');
     }
   }
 

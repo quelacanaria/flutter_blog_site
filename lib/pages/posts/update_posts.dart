@@ -6,9 +6,11 @@ import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UpdatePosts extends StatefulWidget {
-  const UpdatePosts({super.key});
+  final String postId;
+  const UpdatePosts({super.key, required this.postId});
 
   @override
   State<UpdatePosts> createState() => _UpdatePostsState();
@@ -19,6 +21,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
   final StorageServicePost _storageServicePost = StorageServicePost();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final SupabaseClient supabase = Supabase.instance.client;
   String? _public;
   String? _databasePostImageUrl;
   String? _author;
@@ -53,21 +56,25 @@ class _UpdatePostsState extends State<UpdatePosts> {
   @override
   void initState() {
     super.initState();
+    fetchPost();
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final post =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (post != null) {
-        setState(() {
-          _titleController.text = post['title'];
-          _descriptionController.text = post['description'];
-          _public = post['Public'];
-          _author = post['author'];
-          _databasePostImageUrl = post['image'];
-          _postId = post['id'];
-        });
-      }
-    });
+  Future fetchPost() async {
+    try {
+      final post = await _postDatabaseService.databasefetchSinglePost(
+        widget.postId,
+      );
+      setState(() {
+        _titleController.text = post['title'];
+        _descriptionController.text = post['description'];
+        _public = post['Public'];
+        _author = post['author'];
+        _databasePostImageUrl = post['image'];
+        _postId = post['id'];
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future updatePost() async {

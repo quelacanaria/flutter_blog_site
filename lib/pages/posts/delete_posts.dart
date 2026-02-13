@@ -5,7 +5,8 @@ import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
 
 class DeletePosts extends StatefulWidget {
-  const DeletePosts({super.key});
+  final String postId;
+  const DeletePosts({super.key, required this.postId});
 
   @override
   State<DeletePosts> createState() => _DeletePostsState();
@@ -24,9 +25,14 @@ class _DeletePostsState extends State<DeletePosts> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final post =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    fetchSinglePost();
+  }
+
+  Future fetchSinglePost() async {
+    try {
+      final post = await _postDatabaseService.databasefetchSinglePost(
+        widget.postId,
+      );
       if (post != null) {
         setState(() {
           _title = post['title'];
@@ -35,7 +41,9 @@ class _DeletePostsState extends State<DeletePosts> {
           _postId = post['id'];
         });
       }
-    });
+    } catch (e) {
+      print(e) {}
+    }
   }
 
   Future deletePost() async {

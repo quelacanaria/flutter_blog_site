@@ -48,4 +48,17 @@ class UserphotoDatabaseService {
       print(e);
     }
   }
+
+  Future databaseViewAllUsersPhoto(final String userId) async {
+    try {
+      final res = await supabase
+          .from('userphoto')
+          .select('image')
+          .eq('user_id', userId)
+          .maybeSingle();
+      return res?['image'];
+    } catch (e) {
+      return null;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PrivatePosts extends StatefulWidget {
@@ -141,24 +142,18 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                           ],
                                           onSelected: (value) async {
                                             if (value == 0) {
-                                              final res =
-                                                  await Navigator.pushNamed(
-                                                    context,
-                                                    '/updatePosts_page',
-                                                    arguments: post,
-                                                  );
+                                              final res = await context.push(
+                                                '/updatePosts_page/${post['id']}',
+                                              );
                                               if (res == true) {
                                                 fetchPrivatePosts();
                                               }
                                             }
 
                                             if (value == 1) {
-                                              final res =
-                                                  await Navigator.pushNamed(
-                                                    context,
-                                                    '/deletePosts_page',
-                                                    arguments: post,
-                                                  );
+                                              final res = await await context.push(
+                                                '/deletePosts_page/${post['id']}',
+                                              );
                                               if (res == true) {
                                                 fetchPrivatePosts();
                                               }
@@ -197,10 +192,8 @@ class _PrivatePostsState extends State<PrivatePosts> {
 
                                   const SizedBox(height: 12),
                                   GestureDetector(
-                                    onTap: () => Navigator.pushNamed(
-                                      context,
-                                      '/viewSinglePost_page',
-                                      arguments: post,
+                                    onTap: () => context.push(
+                                      '/viewSinglePost_page/${post['id']}',
                                     ),
                                     child: Row(
                                       mainAxisAlignment:

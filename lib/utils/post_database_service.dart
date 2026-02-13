@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PostDatabaseService {
@@ -90,6 +91,20 @@ class PostDatabaseService {
     } catch (e) {
       print(e);
       return [];
+    }
+  }
+
+  Future databasefetchSinglePost(final postId) async {
+    try {
+      final res = await supabase
+          .from('posts')
+          .select()
+          .eq('id', postId)
+          .single();
+      return res;
+    } catch (e) {
+      print(e);
+      return null;
     }
   }
 

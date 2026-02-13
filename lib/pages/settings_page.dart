@@ -7,6 +7,7 @@ import 'package:flutter_blog_site/auth/auth_service.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/storage_service.dart';
 import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -101,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Uploaded Successfully')));
-        Navigator.pushReplacementNamed(context, '/settings_page');
+        context.pushReplacement('/settings_page');
       }
     } on StorageException catch (e) {
       if (mounted) {
@@ -130,7 +131,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('successfully deleted')));
-        Navigator.pushReplacementNamed(context, '/settings_page');
+        context.pushReplacement('/settings_page');
       }
     } catch (e) {
       print(e);
@@ -325,11 +326,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           Text('${currentUser!.email}'),
                           ElevatedButton(
-                            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/privatePosts_page',
-                              (route) => false,
-                            ),
+                            onPressed: () => context.push('/privatePosts_page'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.indigo,
                               foregroundColor: Colors.white,

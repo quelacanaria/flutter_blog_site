@@ -5,12 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
+import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ViewSinglePost extends StatefulWidget {
-  const ViewSinglePost({super.key});
+  final String postId;
+
+  const ViewSinglePost({super.key, required this.postId});
 
   @override
   State<ViewSinglePost> createState() => _ViewSinglePostState();
@@ -21,6 +24,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   final StorageServicePost _storageServicePost = StorageServicePost();
   final CommentDatabaseService _commentDatabaseService =
       CommentDatabaseService();
+  final PostDatabaseService _postDatabaseService = PostDatabaseService();
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _updateCommentController =
       TextEditingController();
@@ -58,10 +62,38 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+
+    fetchSinglePost();
+    fetchAllCommentsInPost();
+  }
+
+  Future fetchSinglePost() async {
+    try {
+      final post = await _postDatabaseService.databasefetchSinglePost(
+        widget.postId,
+      );
+
+      setState(() {
+        _postId = post['id'];
+        _author = post['author'];
+        _imageDatabaseUrl = post['image'];
+        _title = post['title'];
+        _description = post['description'];
+
+        isLoading = false;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Future fetchAllCommentsInPost() async {
     try {
       final res = await _commentDatabaseService.databaseFetchAllCommentsInPost(
-        _postId!,
+        widget.postId,
       );
       setState(() {
         comments = res;
@@ -69,28 +101,6 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     } catch (e) {
       print(e);
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final post =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (post != null) {
-        setState(() {
-          _postId = post['id'];
-          _author = post['author'];
-          _imageDatabaseUrl = post['image'];
-          _title = post['title'];
-          _description = post['description'];
-
-          isLoading = false;
-        });
-        await fetchAllCommentsInPost();
-      }
-    });
   }
 
   Future pickImage() async {

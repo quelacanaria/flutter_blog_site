@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
+import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ViewPosts extends StatefulWidget {
@@ -11,11 +13,27 @@ class ViewPosts extends StatefulWidget {
 }
 
 class _ViewPostsState extends State<ViewPosts> {
+  final UserphotoDatabaseService _userphotoDatabaseService =
+      UserphotoDatabaseService();
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
   List<Map<String, dynamic>> posts = [];
+  List<Map<String, dynamic>> users = [];
   final SupabaseClient supabase = Supabase.instance.client;
   bool isLoading = true;
   String? postData;
+
+  Future<String?> FetchAllUserPhoto(String userId) async {
+    try {
+      final data = await _userphotoDatabaseService.databaseViewAllUsersPhoto(
+        userId,
+      );
+      return data;
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
   Future fetchPosts() async {
     try {
       final data = await _postDatabaseService.viewAllPosts();
@@ -108,7 +126,38 @@ class _ViewPostsState extends State<ViewPosts> {
                                 children: [
                                   Row(
                                     children: [
-                                      const CircleAvatar(
+                                      // FutureBuilder<String?>(
+                                      //   future: FetchAllUserPhoto(
+                                      //     post['user_id'],
+                                      //   ),
+                                      //   builder: (context, snapshot) {
+                                      //     if (snapshot.connectionState ==
+                                      //         ConnectionState.waiting) {
+                                      //       return const CircleAvatar(
+                                      //         radius: 18,
+                                      //         child: CircularProgressIndicator(
+                                      //           strokeWidth: 2,
+                                      //         ),
+                                      //       );
+                                      //     }
+
+                                      //     if (snapshot.hasData &&
+                                      //         snapshot.data != null) {
+                                      //       return CircleAvatar(
+                                      //         radius: 18,
+                                      //         backgroundImage: NetworkImage(
+                                      //           snapshot.data!,
+                                      //         ),
+                                      //       );
+                                      //     }
+
+                                      //     return const CircleAvatar(
+                                      //       radius: 18,
+                                      //       child: Icon(Icons.person),
+                                      //     );
+                                      //   },
+                                      // ),
+                                      CircleAvatar(
                                         radius: 18,
                                         child: Icon(Icons.person),
                                       ),
@@ -141,24 +190,18 @@ class _ViewPostsState extends State<ViewPosts> {
                                           ],
                                           onSelected: (value) async {
                                             if (value == 0) {
-                                              final res =
-                                                  await Navigator.pushNamed(
-                                                    context,
-                                                    '/updatePosts_page',
-                                                    arguments: post,
-                                                  );
+                                              final res = await context.push(
+                                                '/updatePosts_page/${post['id']}',
+                                              );
                                               if (res == true) {
                                                 fetchPosts();
                                               }
                                             }
 
                                             if (value == 1) {
-                                              final res =
-                                                  await Navigator.pushNamed(
-                                                    context,
-                                                    '/deletePosts_page',
-                                                    arguments: post,
-                                                  );
+                                              final res = await context.push(
+                                                '/deletePosts_page/${post['id']}',
+                                              );
                                               if (res == true) {
                                                 fetchPosts();
                                               }
@@ -208,10 +251,8 @@ class _ViewPostsState extends State<ViewPosts> {
 
                                   const SizedBox(height: 12),
                                   GestureDetector(
-                                    onTap: () => Navigator.pushNamed(
-                                      context,
-                                      '/viewSinglePost_page',
-                                      arguments: post,
+                                    onTap: () => context.push(
+                                      '/viewSinglePost_page/${post['id']}',
                                     ),
                                     child: Row(
                                       mainAxisAlignment:
