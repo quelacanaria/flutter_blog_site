@@ -3,6 +3,7 @@ import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
+import 'package:go_router/go_router.dart';
 
 class DeletePosts extends StatefulWidget {
   final String postId;
@@ -144,7 +145,7 @@ class _DeletePostsState extends State<DeletePosts> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () => context.pop(),
                             child: Text('Cancel'),
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.indigo,

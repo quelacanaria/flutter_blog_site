@@ -29,6 +29,10 @@ class _NavbarState extends State<Navbar> {
     setState(() {
       currentUser = null;
     });
+    if (mounted) {
+      // Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      context.pushReplacement('/');
+    }
   }
 
   @override
@@ -102,7 +106,7 @@ class _NavbarState extends State<Navbar> {
               if (value == 0)
                 {}
               else if (value == 1)
-                {context.pushReplacement('/settings_page')}
+                {context.push('/settings_page')}
               else if (value == 2)
                 {logout()}
               else

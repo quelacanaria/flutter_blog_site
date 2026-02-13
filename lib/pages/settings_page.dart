@@ -30,7 +30,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isUploading = false;
   final SupabaseClient supabase = Supabase.instance.client;
 
-  Future<void> fetchProfileImage() async {
+  Future fetchProfileImage() async {
     try {
       final res = await _userphotoDatabaseService.viewSingleUserPhoto();
       setState(() {
@@ -83,26 +83,52 @@ class _SettingsPageState extends State<SettingsPage> {
       if (_imageFile != null) {
         if (imageUserUrl != null) {
           await _storageService.removeUserImage();
+          final imageUrl = await _storageService.uploadUserImage(
+            file: _imageFile!,
+          );
+          await _userphotoDatabaseService.updateUserPhoto(imageUrl!);
+          setState(() {
+            imageUserUrl = imageUrl;
+          });
+        } else {
+          final imageUrl = await _storageService.uploadUserImage(
+            file: _imageFile!,
+          );
+          await _userphotoDatabaseService.uploadUserPhoto(imageUrl!);
+          setState(() {
+            imageUserUrl = imageUrl;
+          });
         }
-        final imageUrl = await _storageService.uploadUserImage(
-          file: _imageFile!,
-        );
-        await _userphotoDatabaseService.uploadUserPhoto(imageUrl!);
       } else if (_imageFileWeb != null) {
         if (imageUserUrl != null) {
           await _storageService.removeUserImage();
+          final imageUrl = await _storageService.uploadUserImage(
+            bytes: _imageFileWeb!,
+          );
+          await _userphotoDatabaseService.updateUserPhoto(imageUrl!);
+          setState(() {
+            imageUserUrl = imageUrl;
+          });
+        } else {
+          final imageUrl = await _storageService.uploadUserImage(
+            bytes: _imageFileWeb!,
+          );
+          await _userphotoDatabaseService.uploadUserPhoto(imageUrl!);
+          setState(() {
+            imageUserUrl = imageUrl;
+          });
         }
-        final imageUrl = await _storageService.uploadUserImage(
-          bytes: _imageFileWeb!,
-        );
-        await _userphotoDatabaseService.uploadUserPhoto(imageUrl!);
       }
+
+      setState(() {
+        _imageFile = null;
+        _imageFileWeb = null;
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Uploaded Successfully')));
-        context.pushReplacement('/settings_page');
       }
     } on StorageException catch (e) {
       if (mounted) {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -439,7 +440,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               ElevatedButton(
-                                onPressed: () => Navigator.pop(context, true),
+                                onPressed: () => context.pop(),
                                 child: Text('Cancel'),
                                 style: ElevatedButton.styleFrom(
                                   foregroundColor: Colors.indigo,
