@@ -9,7 +9,6 @@ import 'package:flutter_blog_site/pages/posts/view_single_post.dart';
 import 'package:flutter_blog_site/pages/profile_page.dart';
 import 'package:flutter_blog_site/pages/register_page.dart';
 import 'package:flutter_blog_site/pages/settings_page.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
@@ -19,10 +18,9 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 void main() async {
   setUrlStrategy(PathUrlStrategy());
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
   await Supabase.initialize(
-    anonKey: dotenv.env['FLUTTER_PUBLIC_ANON_KEY']!,
-    url: dotenv.env['FLUTTER_PUBLIC_SUPABASE_URL']!,
+    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+    url: const String.fromEnvironment('SUPABASE_URL'),
   );
   runApp(const MyApp());
 }
