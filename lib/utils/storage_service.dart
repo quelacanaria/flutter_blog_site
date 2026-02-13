@@ -14,9 +14,9 @@ class StorageService {
           .eq('user_id', supabase.auth.currentUser!.id)
           .single();
       final fileName = res['image'];
-      final parts = fileName.toString().split('/userPhotos/');
+      final parts = fileName.toString().split('/userphotos/');
       final filePath = parts[1];
-      await supabase.storage.from('userPhotos').remove([filePath]);
+      await supabase.storage.from('userphotos').remove([filePath]);
     } catch (e) {
       print(e);
     }
@@ -29,12 +29,12 @@ class StorageService {
     final fileName = '$userId-$timeStamp.png';
     try {
       if (bytes != null) {
-        await supabase.storage.from('userPhotos').uploadBinary(fileName, bytes);
+        await supabase.storage.from('userphotos').uploadBinary(fileName, bytes);
       } else if (file != null) {
-        await supabase.storage.from('userPhotos').upload(fileName, file);
+        await supabase.storage.from('userphotos').upload(fileName, file);
       }
       final imageUrl = Supabase.instance.client.storage
-          .from('userPhotos')
+          .from('userphotos')
           .getPublicUrl(fileName);
       return imageUrl;
     } catch (e) {
