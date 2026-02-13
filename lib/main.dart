@@ -20,7 +20,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
-    url: const String.fromEnvironment('SUPABASE_URL'),
+    url: const String.fromEnvironment('SUPABASE_DATABASE_URL'),
   );
   runApp(const MyApp());
 }
