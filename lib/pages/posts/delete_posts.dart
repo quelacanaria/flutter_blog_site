@@ -77,99 +77,128 @@ class _DeletePostsState extends State<DeletePosts> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Card(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 3,
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: const Text(
-                          'Are you sure you want to delete this post?',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 3,
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(height: 10),
-                      Text(
-                        '$_title',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      _imageDatabaseUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                _imageDatabaseUrl!,
-                                height: 400,
-                                fit: BoxFit.fill,
-                              ),
-                            )
-                          : SizedBox(height: 0),
-                      SizedBox(height: 15),
-                      Text('$_description', style: TextStyle(fontSize: 18)),
-                      SizedBox(height: 15),
-                      Row(
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          ElevatedButton(
-                            onPressed: () => context.pop(),
-                            child: Text('Cancel'),
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.indigo,
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.zero,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                          ElevatedButton(
-                            onPressed: deletePost,
-                            child: Text('Delete'),
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.red,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.zero,
+                          Center(
+                            child: const Text(
+                              'Are you sure you want to delete this post?',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
+                  ),
+                ),
+              ),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(height: 10),
+                          Text(
+                            _title ?? '',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          _imageDatabaseUrl != null
+                              ? Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 200,
+                                      maxHeight: 300,
+                                    ),
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image: NetworkImage(
+                                              _imageDatabaseUrl!,
+                                            ),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : SizedBox(height: 0),
+                          SizedBox(height: 15),
+                          Text(
+                            _description ?? '',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          SizedBox(height: 15),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => context.pop(),
+                                child: Text('Cancel'),
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.indigo,
+                                  backgroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.zero,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 20),
+                              ElevatedButton(
+                                onPressed: deletePost,
+                                child: Text('Delete'),
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.red,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.zero,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

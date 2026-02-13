@@ -440,7 +440,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               ElevatedButton(
-                                onPressed: () => context.pop(),
+                                onPressed: () => context.pop(true),
                                 child: Text('Cancel'),
                                 style: ElevatedButton.styleFrom(
                                   foregroundColor: Colors.indigo,

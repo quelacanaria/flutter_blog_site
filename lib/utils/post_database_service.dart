@@ -85,6 +85,7 @@ class PostDatabaseService {
           .from('posts')
           .select()
           .eq('Public', 'private')
+          .eq('user_id', supabase.auth.currentUser!.id)
           .order('created_at', ascending: false);
 
       return List<Map<String, dynamic>>.from(res);

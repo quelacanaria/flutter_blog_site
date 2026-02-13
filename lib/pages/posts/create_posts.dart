@@ -85,6 +85,7 @@ class _CreatePostsState extends State<CreatePosts> {
       _titleController.clear();
       _descriptionController.clear();
       _imageFile = null;
+      _imageFileWeb = null;
       if (mounted) {
         ScaffoldMessenger.of(
           context,
