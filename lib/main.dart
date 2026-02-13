@@ -10,9 +10,14 @@ import 'package:flutter_blog_site/pages/profile_page.dart';
 import 'package:flutter_blog_site/pages/register_page.dart';
 import 'package:flutter_blog_site/pages/settings_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 void main() async {
+  setUrlStrategy(PathUrlStrategy());
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   await Supabase.initialize(
@@ -27,23 +32,67 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: Supabase.instance.client.auth.currentUser != null
-          ? '/dashboard_page'
-          : '/',
-      routes: {
-        '/': (context) => LoginPage(),
-        '/createAccount_page': (context) => const RegisterPage(),
-        '/dashboard_page': (context) => DashboardPage(),
-        '/createPosts_page': (context) => const CreatePosts(),
-        '/deletePosts_page': (context) => const DeletePosts(),
-        '/updatePosts_page': (context) => const UpdatePosts(),
-        '/viewPosts_page': (context) => const ViewPosts(), //view all post
-        '/settings_page': (context) => const SettingsPage(),
-        '/privatePosts_page': (context) => const PrivatePosts(),
-        '/viewSinglePost_page': (context) => const ViewSinglePost(),
+    final SupabaseClient supabase = Supabase.instance.client;
+
+    // dart format off
+    final GoRouter router = GoRouter(
+      initialLocation: '/',
+      refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
+      redirect: (context, state){
+        final session = supabase.auth.currentSession;
+    final loggingIn = state.matchedLocation == '/';
+
+    if (session == null && !loggingIn) {
+      return '/';
+    }
+
+    if (session != null && loggingIn) {
+      return '/dashboard_page';
+    }
+
+    return null;
+       
       },
+      routes:[
+      GoRoute(path: '/', builder: (context, state) => LoginPage()),
+      GoRoute(path: '/createAccount_page', builder: (context, state) => const RegisterPage()),
+      GoRoute(path: '/dashboard_page', builder: (context, state) => DashboardPage()),
+      GoRoute(path: '/createPosts_page', builder: (context, state) => const CreatePosts()),
+      GoRoute(path: '/deletePosts_page/:id', builder: (context, state) {
+        final postId = state.pathParameters['id']!;
+        return DeletePosts(postId: postId);}),
+      GoRoute(path: '/updatePosts_page/:id', builder: (context, state) {
+        final postId = state.pathParameters['id']!;
+        return UpdatePosts(postId: postId);
+      },),
+      GoRoute(path: '/viewPosts_page', builder: (context, state) => const ViewPosts()),
+      GoRoute(path: '/settings_page', builder: (context, state) => SettingsPage()),
+      GoRoute(path: '/privatePosts_page', builder: (context, state) => PrivatePosts()),
+      GoRoute(path: '/viewSinglePost_page/:id', builder: (context, state) {
+        final postId = state.pathParameters['id']!;
+        return ViewSinglePost(postId: postId);
+      }) 
+    ]);
+
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      routerConfig:router
     );
+  }
+}
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    _subscription = stream.asBroadcastStream().listen((event) {
+      notifyListeners();
+    });
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 }
