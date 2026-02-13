@@ -88442,12 +88442,12 @@ return A.l(h.eh("user_id",(g==null?null:g.r).a).o5(0),$async$t9)
 case 6:n=b
 m=J.db(n,"image")
 h=t.s
-l=A.b(J.cM(m).split("/userPhotos/"),h)
+l=A.b(J.cM(m).split("/userphotos/"),h)
 k=J.db(l,1)
 i=i.at
 i===$&&A.a()
 s=7
-return A.l(i.cG("userPhotos").D(0,A.b([k],h)),$async$t9)
+return A.l(i.cG("userphotos").D(0,A.b([k],h)),$async$t9)
 case 7:q=1
 s=5
 break
@@ -88475,12 +88475,12 @@ p=4
 j=j.at
 j===$&&A.a()
 s=7
-return A.l(j.cG("userPhotos").xb(m,a),$async$DW)
+return A.l(j.cG("userphotos").xb(m,a),$async$DW)
 case 7:j=$.dF().b
 j===$&&A.a()
 j=j.at
 j===$&&A.a()
-l=j.cG("userPhotos").MY(m)
+l=j.cG("userphotos").MY(m)
 q=l
 s=1
 break
