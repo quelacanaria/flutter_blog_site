@@ -47,7 +47,7 @@ class UserphotoDatabaseService {
     } catch (e) {
       print(e);
     }
-  }
+  } //
 
   Future databaseViewAllUsersPhoto(final String userId) async {
     try {
