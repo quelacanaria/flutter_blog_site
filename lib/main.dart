@@ -19,8 +19,8 @@ void main() async {
   setUrlStrategy(PathUrlStrategy());
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
-    anonKey: const String.fromEnvironment('FLUTTER_SUPABASE_ANON_KEY'),
-    url: const String.fromEnvironment('FLUTTER_SUPABASE_DATABASE_URL'),
+    anonKey: 'FLUTTER_SUPABASE_ANON_KEY',
+    url: 'FLUTTER_SUPABASE_DATABASE_URL',
   );
   runApp(const MyApp());
 }
