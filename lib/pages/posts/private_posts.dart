@@ -174,13 +174,25 @@ class _PrivatePostsState extends State<PrivatePosts> {
 
                                   const SizedBox(height: 8),
                                   if (post['image'] != null)
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Image.network(
-                                        post['image'],
-                                        width: double.infinity,
-                                        height: 200,
-                                        fit: BoxFit.fill,
+                                    Center(
+                                      child: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          minHeight: 200,
+                                          maxHeight: 300,
+                                        ),
+                                        child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: NetworkImage(
+                                                  post['image'],
+                                                ),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
 
