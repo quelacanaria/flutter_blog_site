@@ -130,7 +130,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Updated successfull')));
+        ).showSnackBar(SnackBar(content: Text('Updated successful')));
       }
     } catch (e) {
       print(e);
