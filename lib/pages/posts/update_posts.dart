@@ -216,7 +216,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
                             },
                           ),
                           RadioListTile<String>(
-                            title: Text('Private'),
+                            title: Text('private'),
                             value: 'private',
                             groupValue: _public,
                             onChanged: (value) {
