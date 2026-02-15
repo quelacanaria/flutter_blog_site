@@ -11,6 +11,7 @@ import 'package:flutter_blog_site/pages/register_page.dart';
 import 'package:flutter_blog_site/pages/settings_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -18,9 +19,10 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 void main() async {
   setUrlStrategy(PathUrlStrategy());
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   await Supabase.initialize(
-    anonKey: 'FLUTTER_SUPABASE_ANON_KEY',
-    url: 'FLUTTER_SUPABASE_DATABASE_URL',
+    anonKey: dotenv.env['FLUTTER_SUPABASE_ANON_KEY']!,
+    url: dotenv.env['FLUTTER_SUPABASE_DATABASE_URL']!,
   );
   runApp(const MyApp());
 }
