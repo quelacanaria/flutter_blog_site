@@ -28,7 +28,7 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               Text(
                 'Welcome ${supabase.auth.currentUser!.userMetadata?['name']}',
-                style: TextStyle(fontSize: 50, fontWeight: FontWeight.w900),
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
               ),
               SizedBox(height: 2),
               Padding(
