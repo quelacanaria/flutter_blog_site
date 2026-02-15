@@ -20,10 +20,15 @@ void main() async {
   setUrlStrategy(PathUrlStrategy());
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+  final supabaseUrl = dotenv.env['FLUTTER_SUPABASE_DATABASE_URL'];
+final supabaseAnonKey = dotenv.env['FLUTTER_SUPABASE_ANON_KEY'];
+
+if (supabaseUrl == null || supabaseAnonKey == null) {
+  throw Exception('Missing Supabase environment variables');
+}
   await Supabase.initialize(
-    anonKey: dotenv.env['FLUTTER_SUPABASE_ANON_KEY']!,
-    url: dotenv.env['FLUTTER_SUPABASE_DATABASE_URL']!,
-  );
+    url: supabaseUrl,
+  anonKey: supabaseAnonKey,);
   runApp(const MyApp());
 }
 
