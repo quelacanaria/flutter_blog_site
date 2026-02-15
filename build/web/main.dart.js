@@ -87863,7 +87863,7 @@ return new A.Te(s)}}
 A.Te.prototype={
 L(a){var s=null,r=this.d.gcU().c
 r=(r==null?s:r.r).c
-return A.kq(B.bZ,A.bV(new A.cp(new A.ab(0,500,0,1/0),A.cC(A.b([A.b5("Welcome "+A.j(r==null?s:r.h(0,"name")),s,s,s,A.dk(s,s,s,s,s,s,s,s,s,s,s,50,s,s,B.hv,s,s,!0,s,s,s,s,s,s,s,s),s,s),A.aA(s,2,s),new A.bR(new A.ak(10,10,10,10),A.b5("To empower individuals to share their stories, ideas, and expertise with the world by providing an intuitive, accessible, and engaging platform for blogging.",s,s,s,A.dk(s,s,s,s,s,s,s,s,s,s,s,16,s,s,s,s,s,!0,s,s,s,s,s,s,s,s),B.fs,s),s),A.aA(s,10,s),A.aA(A.eI(A.b5("Create",s,s,s,s,s,s),new A.aph(a),A.eJ(s,s,B.ad,s,s,s,s,s,s,B.j,s,s,s,s,new A.bd(A.cH(3),B.m),s,s,s,s,s)),40,120)],t.p),B.a0,B.f8,B.a9),s),s,s))}}
+return A.kq(B.bZ,A.bV(new A.cp(new A.ab(0,500,0,1/0),A.cC(A.b([A.b5("Welcome "+A.j(r==null?s:r.h(0,"name")),s,s,s,A.dk(s,s,s,s,s,s,s,s,s,s,s,30,s,s,B.hv,s,s,!0,s,s,s,s,s,s,s,s),s,s),A.aA(s,2,s),new A.bR(new A.ak(10,10,10,10),A.b5("To empower individuals to share their stories, ideas, and expertise with the world by providing an intuitive, accessible, and engaging platform for blogging.",s,s,s,A.dk(s,s,s,s,s,s,s,s,s,s,s,16,s,s,s,s,s,!0,s,s,s,s,s,s,s,s),B.fs,s),s),A.aA(s,10,s),A.aA(A.eI(A.b5("Create",s,s,s,s,s,s),new A.aph(a),A.eJ(s,s,B.ad,s,s,s,s,s,s,B.j,s,s,s,s,new A.bd(A.cH(3),B.m),s,s,s,s,s)),40,120)],t.p),B.a0,B.f8,B.a9),s),s,s))}}
 A.aph.prototype={
 $0(){return A.ne(this.a,"/createPosts_page",t.X)},
 $S:0}
