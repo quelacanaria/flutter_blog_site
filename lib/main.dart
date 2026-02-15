@@ -16,11 +16,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 void main() async {
-  setUrlStrategy(PathUrlStrategy());
   WidgetsFlutterBinding.ensureInitialized();
+  setUrlStrategy(PathUrlStrategy());
   await Supabase.initialize(
-    anonKey: 'sb_publishable_SCcJ8CnZRzO6NVqxW13jhQ_BEw9r8TW',
     url: 'https://jwvmwlyhexouldycjwno.supabase.co',
+    anonKey: 'sb_publishable_SCcJ8CnZRzO6NVqxW13jhQ_BEw9r8TW',
   );
   runApp(const MyApp());
 }
