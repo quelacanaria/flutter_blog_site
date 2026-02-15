@@ -11,7 +11,6 @@ import 'package:flutter_blog_site/pages/register_page.dart';
 import 'package:flutter_blog_site/pages/settings_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -19,16 +18,10 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 void main() async {
   setUrlStrategy(PathUrlStrategy());
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
-  final supabaseUrl = dotenv.env['FLUTTER_SUPABASE_DATABASE_URL'];
-final supabaseAnonKey = dotenv.env['FLUTTER_SUPABASE_ANON_KEY'];
-
-if (supabaseUrl == null || supabaseAnonKey == null) {
-  throw Exception('Missing Supabase environment variables');
-}
   await Supabase.initialize(
-    url: supabaseUrl,
-  anonKey: supabaseAnonKey,);
+    anonKey: 'sb_publishable_SCcJ8CnZRzO6NVqxW13jhQ_BEw9r8TW',
+    url: 'https://jwvmwlyhexouldycjwno.supabase.co',
+  );
   runApp(const MyApp());
 }
 
