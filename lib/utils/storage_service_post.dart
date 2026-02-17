@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class StorageServicePost {
   final SupabaseClient supabase = Supabase.instance.client;
@@ -28,6 +29,44 @@ class StorageServicePost {
     } catch (e) {
       print(e);
       return null;
+    }
+  }
+
+  // dart format off
+  Future<List<String>> storageUploadMultipleImages({List<AssetEntity>? assets, List<Uint8List>? bytesList}) async {
+    if ((assets == null || assets.isEmpty) && (bytesList == null || bytesList.isEmpty)) return [];
+    final userId = supabase.auth.currentUser!.id;
+    List<String> imageUrls = [];
+    try {
+      if(bytesList != null){
+        for(var bytes in bytesList){
+           final fileName = '$userId-${DateTime.now().microsecondsSinceEpoch}.png';
+          await supabase.storage.from('postsImages').uploadBinary(fileName, bytes);
+          final url = supabase.storage.from('postsImages').getPublicUrl(fileName);
+
+          imageUrls.add(url);
+        }
+      }
+
+      if(assets != null){
+        for(var asset in assets){
+          final fileData = await asset.file;
+
+           if(fileData != null){
+            final fileName = '$userId-${DateTime.now().microsecondsSinceEpoch}.png';
+          await supabase.storage.from('postsImages').upload(fileName, fileData);
+          final url = supabase.storage.from('postsImages').getPublicUrl(fileName);
+           imageUrls.add(url);
+           }
+
+         
+        }
+      }
+
+      return imageUrls;
+    } catch (e) {
+      print(e);
+      return [];
     }
   }
 

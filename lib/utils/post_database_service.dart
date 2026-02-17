@@ -3,9 +3,26 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PostDatabaseService {
   final SupabaseClient supabase = Supabase.instance.client;
+  //single Image
   Future uploadPosts(
     final String public,
     final String? imageUrl,
+    final String title,
+    final String description,
+  ) async {
+    await supabase.from('posts').insert({
+      'Public': public,
+      'image': imageUrl,
+      'title': title,
+      'description': description,
+      'author': supabase.auth.currentUser!.userMetadata?['name'],
+      'user_id': supabase.auth.currentUser!.id,
+    });
+  }
+
+  Future databaseUploadPosts(
+    final String public,
+    final List<String> imageUrl,
     final String title,
     final String description,
   ) async {
