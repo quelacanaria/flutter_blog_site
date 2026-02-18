@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blog_site/components/carousel_all_image.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
@@ -35,7 +37,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   Uint8List? _imageFileWebUpdateComment;
   String? _postId;
   String? _author;
-  String? _imageDatabaseUrl;
+  List<String> _imageDatabaseUrl = [];
   String? _imageDatabaseUpdateUrl;
   String? _title;
   String? _description;
@@ -79,7 +81,11 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       setState(() {
         _postId = post['id'];
         _author = post['author'];
-        _imageDatabaseUrl = post['image'];
+        if (post['image'] != null) {
+          _imageDatabaseUrl = List<String>.from(jsonDecode(post['image']));
+        } else {
+          _imageDatabaseUrl = List<String>.from(post['image']);
+        }
         _title = post['title'];
         _description = post['description'];
 
@@ -355,10 +361,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                             fontSize: 30,
                           ),
                         ),
-                        if (_imageDatabaseUrl != null) ...[
-                          SizedBox(height: 5),
-                          Image.network(_imageDatabaseUrl!, height: 400),
-                        ],
+                        CarouselImage(All: _imageDatabaseUrl),
                         SizedBox(height: 20),
                         Text('$_description', style: TextStyle(fontSize: 20)),
                         SizedBox(height: 15),

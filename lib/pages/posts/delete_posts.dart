@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_blog_site/components/carousel_all_image.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
@@ -19,7 +22,7 @@ class _DeletePostsState extends State<DeletePosts> {
   final StorageServicePost _storageServicePost = StorageServicePost();
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
   String? _title;
-  String? _imageDatabaseUrl;
+  List<String> _imageDatabaseUrl = [];
   String? _description;
   String? _postId;
 
@@ -37,7 +40,11 @@ class _DeletePostsState extends State<DeletePosts> {
       if (post != null) {
         setState(() {
           _title = post['title'];
-          _imageDatabaseUrl = post['image'];
+          if (post['image'] != null) {
+            _imageDatabaseUrl = List<String>.from(jsonDecode(post['image']));
+          } else {
+            _imageDatabaseUrl = List<String>.from(post['image']);
+          }
           _description = post['description'];
           _postId = post['id'];
         });
@@ -49,9 +56,7 @@ class _DeletePostsState extends State<DeletePosts> {
 
   Future deletePost() async {
     try {
-      await _storageServicePost.deleteStorageAllCommentImageInASinglePost(
-        _postId!,
-      );
+      await _storageServicePost.deleteListOfImageInPost(_imageDatabaseUrl);
       await _commentDatabaseService.databaseDeleteAllCommentInASinglePost(
         _postId!,
       );
@@ -138,29 +143,7 @@ class _DeletePostsState extends State<DeletePosts> {
                             ),
                           ),
                           SizedBox(height: 10),
-                          _imageDatabaseUrl != null
-                              ? Center(
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      minHeight: 200,
-                                      maxHeight: 300,
-                                    ),
-                                    child: AspectRatio(
-                                      aspectRatio: 1,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: NetworkImage(
-                                              _imageDatabaseUrl!,
-                                            ),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : SizedBox(height: 0),
+                          CarouselImage(All: _imageDatabaseUrl),
                           SizedBox(height: 15),
                           Text(
                             _description ?? '',
