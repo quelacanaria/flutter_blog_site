@@ -85,6 +85,20 @@ class StorageServicePost {
     }
   }
 
+  Future storageDeleteSingleImageInTheList(final String imageUrlIndex)async{
+    try{
+      if(imageUrlIndex.isEmpty)return;
+      final uri = Uri.parse(imageUrlIndex);
+      final path = uri.pathSegments.sublist(5).toList();
+
+      await supabase.storage.from('postsImages').remove(path);
+    }catch(e){
+      print(e);
+    }
+  }
+
+  
+
   Future deleteStoragePostImage(final String postId) async {
     try {
       final res = await supabase

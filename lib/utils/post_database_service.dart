@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -62,6 +64,25 @@ class PostDatabaseService {
             'description': description,
           })
           .eq('id', postId);
+    }
+  }
+
+  Future deleteDatabaseSinleImageToList(String postImage, String postId) async {
+    try {
+      final post = await supabase
+          .from('posts')
+          .select('image')
+          .eq('id', postId)
+          .maybeSingle();
+      if (post == null || post['image'] == null) return;
+      List<String> images = List<String>.from(jsonDecode(post['image']));
+      images.remove(postImage);
+      await supabase
+          .from('posts')
+          .update({'image': jsonEncode(images)})
+          .eq('id', postId);
+    } catch (e) {
+      print(e);
     }
   }
 
