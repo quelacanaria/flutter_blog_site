@@ -23,7 +23,7 @@ class _CreatePostsState extends State<CreatePosts> {
   String _postState = 'public';
   List<AssetEntity> _imageFiles = [];
   List<Uint8List> _imageFilesWeb = [];
-
+  bool isLoading = true;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 

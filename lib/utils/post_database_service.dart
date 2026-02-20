@@ -38,33 +38,34 @@ class PostDatabaseService {
     });
   }
 
-  Future updatePost(
+  Future dataseUpdatePostWithImage(
     final String public,
-    final String? imageUrl,
+    final List<String> imageUrl,
     final String title,
     final String description,
     final String postId,
   ) async {
-    if (imageUrl != null) {
-      await supabase
-          .from('posts')
-          .update({
-            'Public': public,
-            'image': imageUrl,
-            'title': title,
-            'description': description,
-          })
-          .eq('id', postId);
-    } else {
-      await supabase
-          .from('posts')
-          .update({
-            'Public': public,
-            'title': title,
-            'description': description,
-          })
-          .eq('id', postId);
-    }
+    await supabase
+        .from('posts')
+        .update({
+          'Public': public,
+          'image': imageUrl,
+          'title': title,
+          'description': description,
+        })
+        .eq('id', postId);
+  }
+
+  Future updatePost(
+    final String public,
+    final String title,
+    final String description,
+    final String postId,
+  ) async {
+    await supabase
+        .from('posts')
+        .update({'Public': public, 'title': title, 'description': description})
+        .eq('id', postId);
   }
 
   Future deleteDatabaseSinleImageToList(String postImage, String postId) async {
