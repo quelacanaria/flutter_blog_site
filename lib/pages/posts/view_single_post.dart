@@ -6,11 +6,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
+import 'package:flutter_blog_site/pages/posts/view_all_comments.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class ViewSinglePost extends StatefulWidget {
   final String postId;
@@ -31,10 +33,10 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   final TextEditingController _updateCommentController =
       TextEditingController();
   late final currentUser = supabase.auth.currentUser;
-  File? _imageFile;
-  Uint8List? _imageFileWeb;
-  File? _imageFileUpdateComment;
-  Uint8List? _imageFileWebUpdateComment;
+  List<AssetEntity> _imageFiles = [];
+  List<Uint8List> _imageFilesWeb = [];
+  File? _imageFilesUpdateComment;
+  Uint8List? _imageFilesWebUpdateComment;
   String? _postId;
   String? _author;
   List<String> _imageDatabaseUrl = [];
@@ -98,37 +100,51 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
 
   Future fetchAllCommentsInPost() async {
     try {
-      final res = await _commentDatabaseService.databaseFetchAllCommentsInPost(
+      final data = await _commentDatabaseService.databaseFetchAllCommentsInPost(
         widget.postId,
       );
       setState(() {
-        comments = res;
+        comments = data;
       });
     } catch (e) {
       print(e);
     }
   }
 
-  Future pickImage() async {
+  Future pickImagesWeb() async {
     final ImagePicker picker = ImagePicker();
     try {
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
+      final List<XFile> images = await picker.pickMultiImage();
+      if (images.isNotEmpty) {
         if (kIsWeb) {
-          final bytes = await image.readAsBytes();
+          List<Uint8List> webImages = [];
+          for (var image in images) {
+            final bytes = await image.readAsBytes();
+            webImages.add(bytes);
+          }
           setState(() {
-            _imageFile = null;
-            _imageFileWeb = bytes;
-          });
-        } else {
-          setState(() {
-            _imageFileWeb = null;
-            _imageFile = File(image.path);
+            _imageFilesWeb.addAll(webImages);
           });
         }
-      }
+      } else {}
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future pickImagesMobile() async {
+    final List<AssetEntity>? image = await AssetPicker.pickAssets(
+      context,
+      pickerConfig: AssetPickerConfig(
+        maxAssets: 20,
+        selectedAssets: _imageFiles,
+        requestType: RequestType.image,
+      ),
+    );
+    if (image != null) {
+      setState(() {
+        _imageFiles = image;
+      });
     }
   }
 
@@ -140,13 +156,13 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
         if (kIsWeb) {
           final bytes = await image.readAsBytes();
           setState(() {
-            _imageFileUpdateComment = null;
-            _imageFileWebUpdateComment = bytes;
+            _imageFilesUpdateComment = null;
+            _imageFilesWebUpdateComment = bytes;
           });
         } else {
           setState(() {
-            _imageFileWebUpdateComment = null;
-            _imageFileUpdateComment = File(image.path);
+            _imageFilesWebUpdateComment = null;
+            _imageFilesUpdateComment = File(image.path);
           });
         }
       }
@@ -168,36 +184,39 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
         );
         return;
       }
-      if (_imageFile != null) {
-        final res = await _storageServicePost.uploadPostImage(
-          file: _imageFile!,
+      List<String> imageUrl = [];
+      if (_imageFiles.isNotEmpty) {
+        imageUrl = await _storageServicePost.storageUploadMultipleImages(
+          assets: _imageFiles,
         );
-        await _commentDatabaseService.uploadDatabaseComment(
+        await _commentDatabaseService.uploadDatabaseMultipleImageComment(
           comment,
-          res,
-          _postId!,
-        );
-      } else if (_imageFileWeb != null) {
-        final res = await _storageServicePost.uploadPostImage(
-          bytes: _imageFileWeb!,
-        );
-        await _commentDatabaseService.uploadDatabaseComment(
-          comment,
-          res,
-          _postId!,
-        );
-      } else {
-        await _commentDatabaseService.uploadDatabaseComment(
-          comment,
-          null,
-          _postId!,
+          imageUrl,
+          widget.postId,
         );
       }
+      if (_imageFilesWeb.isNotEmpty) {
+        imageUrl = await _storageServicePost.storageUploadMultipleImages(
+          bytesList: _imageFilesWeb,
+        );
+        await _commentDatabaseService.uploadDatabaseMultipleImageComment(
+          comment,
+          imageUrl,
+          widget.postId,
+        );
+      }
+      if (_imageFiles.isEmpty && _imageFilesWeb.isEmpty) {
+        await _commentDatabaseService.uploadDatabaseComment(
+          comment,
+          widget.postId,
+        );
+      }
+
       setState(() {
-        _imageFileUpdateComment = null;
+        _imageFilesUpdateComment = null;
         _commentController.clear();
-        _imageFile = null;
-        _imageFileWeb = null;
+        _imageFiles = [];
+        _imageFilesWeb = [];
       });
       await fetchAllCommentsInPost();
       if (mounted) {
@@ -214,84 +233,6 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     }
   }
 
-  Future deleteSingleComment(final String commentId) async {
-    try {
-      await _storageServicePost.deleteStorageCommentImage(commentId);
-      await _commentDatabaseService.databaseDeleteSingleComment(commentId);
-      await fetchAllCommentsInPost();
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: const Text('Comment deleted')));
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future updateComment(final String commentId) async {
-    final comment = _updateCommentController.text;
-    try {
-      await _storageServicePost.deleteStorageCommentImage(commentId);
-      if (_imageFile != null) {
-        final res = await _storageServicePost.uploadPostImage(
-          file: _imageFileUpdateComment,
-        );
-        await _commentDatabaseService.databaseUpdateComments(
-          comment,
-          res,
-          commentId,
-        );
-      } else {
-        final res = await _storageServicePost.uploadPostImage(
-          bytes: _imageFileWebUpdateComment,
-        );
-        await _commentDatabaseService.databaseUpdateComments(
-          comment,
-          res,
-          commentId,
-        );
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: const Text('Comment Updated')));
-      }
-      setState(() {
-        _imageFileWebUpdateComment = null;
-        _imageFileUpdateComment = null;
-        _isEditing = false;
-      });
-      await fetchAllCommentsInPost();
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future updateDeleteImageComment(final String commentId) async {
-    final comment = _updateCommentController.text;
-    try {
-      await _storageServicePost.deleteStorageCommentImage(commentId);
-      await _commentDatabaseService.databaseUpdateDeleteImageComments(
-        comment,
-        null,
-        commentId,
-      );
-      await fetchAllCommentsInPost();
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: const Text('Image deleted')));
-      }
-      setState(() {
-        _isEditing = false;
-      });
-      await fetchAllCommentsInPost();
-    } catch (e) {
-      print(e);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -304,7 +245,12 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                 children: [
                   _singlePostAndCommentInput(),
                   const SizedBox(height: 20),
-                  _allCommentsInAPost(),
+                  // _allCommentsInAPost(),
+                  ViewAllComments(
+                    allComments: comments,
+                    postId: widget.postId,
+                    onChange: fetchAllCommentsInPost,
+                  ),
                 ],
               ),
       ),
@@ -382,7 +328,13 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                             SizedBox(
                               height: 55,
                               child: ElevatedButton(
-                                onPressed: pickImage,
+                                onPressed: () {
+                                  setState(() {
+                                    kIsWeb
+                                        ? pickImagesWeb()
+                                        : pickImagesMobile();
+                                  });
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.indigo,
                                   foregroundColor: Colors.white,
@@ -395,88 +347,10 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                             ),
                           ],
                         ),
-                        if (_imageFile != null) ...[
-                          SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    _imageFile!,
-                                    width: 80,
-                                    height: 70,
-                                    fit: BoxFit.fill,
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 52,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _imageFile = null;
-                                      });
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.6),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      padding: EdgeInsets.all(6),
-                                      child: Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 15,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ] else if (_imageFileWeb != null) ...[
-                          SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.memory(
-                                    _imageFileWeb!,
-                                    width: 80,
-                                    height: 70,
-                                    fit: BoxFit.fill,
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 52,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _imageFileWeb = null;
-                                      });
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.6),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      padding: EdgeInsets.all(6),
-                                      child: Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 15,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ] else
-                          SizedBox(height: 0),
+                        if (_imageFilesWeb.isNotEmpty ||
+                            _imageFiles.isNotEmpty) ...[
+                          showAllSelectedImages(),
+                        ],
                         SizedBox(height: 10),
                         SizedBox(
                           height: 50,
@@ -504,328 +378,45 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     );
   }
 
-  Widget _allCommentsInAPost() {
-    if (comments.isEmpty) {
-      return const Center(child: Text('No comments yet'));
-    }
-    return Center(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget showAllSelectedImages() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: kIsWeb ? _imageFilesWeb.length : _imageFiles.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 6,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemBuilder: (context, index) {
+        return Stack(
           children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: Column(
-                  children: comments.map((comment) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 5,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      elevation: 3,
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                const CircleAvatar(
-                                  radius: 20,
-                                  child: Icon(Icons.person, size: 20),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  '${comment['author']}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                                const Spacer(),
-                                if (currentUser != null &&
-                                    comment['author'] ==
-                                        currentUser!.userMetadata?['name']) ...[
-                                  PopupMenuButton<int>(
-                                    offset: const Offset(0, 50),
-                                    icon: const CircleAvatar(
-                                      radius: 20,
-                                      child: Icon(Icons.more_vert),
-                                    ),
-                                    itemBuilder: (context) => [
-                                      PopupMenuItem(
-                                        value: 0,
-                                        child: const Text('Edit'),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 1,
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
-                                    onSelected: (value) {
-                                      if (value == 0) {
-                                        setEditingIdFn(
-                                          comment['id'],
-                                          comment['comment'],
-                                          comment['image'],
-                                        );
-                                      }
-
-                                      if (value == 1) {
-                                        deleteSingleComment(comment['id']);
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ],
-                            ),
-                            if (_isEditing &&
-                                _setEditingId == comment['id']) ...[
-                              SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _updateCommentController,
-                                      decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        hintText: 'wow impressive',
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 5),
-                                  SizedBox(
-                                    height: 55,
-                                    child: ElevatedButton(
-                                      onPressed: pickImageUpdateComments,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.indigo,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            5,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Icon(
-                                        Icons.file_present_sharp,
-                                        size: 40,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (_imageFileUpdateComment != null) ...[
-                                SizedBox(height: 10),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Stack(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.file(
-                                          _imageFileUpdateComment!,
-                                          width: 80,
-                                          height: 70,
-                                          fit: BoxFit.fill,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        left: 52,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              _imageFileUpdateComment = null;
-                                            });
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(
-                                                0.6,
-                                              ),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            padding: EdgeInsets.all(6),
-                                            child: Icon(
-                                              Icons.close,
-                                              color: Colors.white,
-                                              size: 15,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ] else if (_imageFileWebUpdateComment !=
-                                  null) ...[
-                                SizedBox(height: 10),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Stack(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.memory(
-                                          _imageFileWebUpdateComment!,
-                                          width: 80,
-                                          height: 70,
-                                          fit: BoxFit.fill,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        left: 52,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              _imageFileWebUpdateComment = null;
-                                            });
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(
-                                                0.6,
-                                              ),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            padding: EdgeInsets.all(6),
-                                            child: Icon(
-                                              Icons.close,
-                                              color: Colors.white,
-                                              size: 15,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ] else if (_imageDatabaseUpdateUrl != null) ...[
-                                SizedBox(height: 10),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Stack(
-                                    children: [
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          _imageDatabaseUpdateUrl!,
-                                          width: 80,
-                                          height: 70,
-                                          fit: BoxFit.fill,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        left: 52,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              updateDeleteImageComment(
-                                                comment['id'],
-                                              );
-                                            });
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            padding: EdgeInsets.all(6),
-                                            child: Icon(
-                                              Icons.delete,
-                                              color: Colors.white,
-                                              size: 15,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ] else
-                                SizedBox(height: 0),
-
-                              SizedBox(height: 10),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  SizedBox(
-                                    height: 50,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _isEditing = false;
-                                          _imageFileUpdateComment = null;
-                                          _imageFileWebUpdateComment = null;
-                                        });
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.indigo,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                      ),
-                                      child: const Text('Cancel'),
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  SizedBox(
-                                    height: 50,
-                                    child: ElevatedButton(
-                                      onPressed: () =>
-                                          updateComment(comment['id']),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.indigo,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                      ),
-                                      child: const Text('Update'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ] else ...[
-                              if (comment['image'] != null) ...[
-                                SizedBox(height: 10),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Image.network(
-                                    comment['image'],
-                                    height: 100,
-                                  ),
-                                ),
-                              ],
-                              SizedBox(height: 10),
-                              Text(
-                                '${comment['comment']}',
-                                style: TextStyle(fontSize: 15),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+            Positioned.fill(
+              child: kIsWeb
+                  ? Image.memory(_imageFilesWeb[index], fit: BoxFit.cover)
+                  : AssetEntityImage(_imageFiles[index], fit: BoxFit.cover),
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    kIsWeb
+                        ? _imageFilesWeb.removeAt(index)
+                        : _imageFiles.removeAt(index);
+                  });
+                },
+                child: const CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.black54,
+                  child: Icon(Icons.close, size: 14, color: Colors.white),
                 ),
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

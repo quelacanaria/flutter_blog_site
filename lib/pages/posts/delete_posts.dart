@@ -58,9 +58,12 @@ class _DeletePostsState extends State<DeletePosts> {
 
   Future deletePost() async {
     try {
+      await _storageServicePost.deleteStorageAllCommentImageInASinglePost(
+        widget.postId,
+      );
       await _storageServicePost.deleteListOfImageInPost(_imageDatabaseUrl);
       await _commentDatabaseService.databaseDeleteAllCommentInASinglePost(
-        _postId!,
+        widget.postId,
       );
       await _storageServicePost.deleteStoragePostImage(_postId!);
       await _postDatabaseService.deleteDatabaseSinglePost(_postId!);

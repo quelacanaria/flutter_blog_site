@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -85,6 +86,21 @@ class StorageServicePost {
     }
   }
 
+  Future deleteListOfImageInComment(List<String> imageUrls)async{
+    if(imageUrls.isEmpty) return;
+    try{
+      final paths = imageUrls.map((url){
+        final uri = Uri.parse(url);
+        return uri.pathSegments.sublist(5).join('/');
+      }).toList();
+
+      await supabase.storage.from('postsImages').remove(paths);
+
+    }catch(e){
+      print(e);
+    }
+  }
+
   Future storageDeleteSingleImageInTheList(final String imageUrlIndex)async{
     try{
       if(imageUrlIndex.isEmpty)return;
@@ -129,31 +145,40 @@ class StorageServicePost {
     }
   }
 
-  Future deleteStorageAllCommentImageInASinglePost(final String postId) async {
-    try {
-      final res = await supabase
-          .from('comments')
-          .select('image')
-          .eq('post_id', postId);
+  Future<void> deleteStorageAllCommentImageInASinglePost(String postId) async {
+  try {
+    // 1️⃣ Fetch all comments for the post
+    final comments = await supabase
+        .from('comments')
+        .select('id, image')
+      .eq('post_id', postId);  // assuming you have a post_id column
 
-      if (res.isEmpty) return;
+    // 2️⃣ Delete images for each comment
+    for (final comment in comments) {
+      final commentId = comment['id'] as String;
+      final imageData = comment['image'];
 
-      List<String> filePaths = [];
+      if (imageData != null && imageData.toString().isNotEmpty) {
+        final List<dynamic> images = jsonDecode(imageData);
+        
+        final filePaths = images.map<String>((url) {
+          return url.split('/postsImages/')[1];
+        }).toList();
 
-      for (final comment in res) {
-        final imageUrl = comment['image'];
-
-        if (imageUrl != null && imageUrl.toString().isNotEmpty) {
-          final filePath = imageUrl.toString().split('/postsImages/').last;
-
-          filePaths.add(filePath);
-        }
+        await supabase.storage
+            .from('postsImages')
+            .remove(filePaths);
       }
-      if (filePaths.isNotEmpty) {
-        await supabase.storage.from('postsImages').remove(filePaths);
-      }
-    } catch (e) {
-      print(e);
     }
+
+    // 3️⃣ Delete all comments from DB (optional - depends on your cascade rules)
+    await supabase
+        .from('comments')
+        .delete()
+        .eq('post_id', postId);
+
+  } catch (e) {
+    print(e);
   }
+}
 }

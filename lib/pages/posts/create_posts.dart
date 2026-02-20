@@ -93,7 +93,7 @@ class _CreatePostsState extends State<CreatePosts> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Post Successfull')));
+        ).showSnackBar(SnackBar(content: Text('Successfully Post')));
       }
     } catch (e) {
       print(e);

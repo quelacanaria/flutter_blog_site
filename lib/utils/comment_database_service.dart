@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CommentDatabaseService {
@@ -5,7 +7,22 @@ class CommentDatabaseService {
 
   Future uploadDatabaseComment(
     final String comment,
-    final String? imageUrl,
+    final String postId,
+  ) async {
+    try {
+      await supabase.from('comments').insert({
+        'comment': comment,
+        'post_id': postId,
+        'author': supabase.auth.currentUser!.userMetadata?['name'],
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future uploadDatabaseMultipleImageComment(
+    final String comment,
+    final List<String> imageUrl,
     final String postId,
   ) async {
     try {
@@ -28,6 +45,28 @@ class CommentDatabaseService {
     }
   }
 
+  Future deleteDatabaseSinleImageToList(
+    String commentImage,
+    String commentId,
+  ) async {
+    try {
+      final comment = await supabase
+          .from('comments')
+          .select('image')
+          .eq('id', commentId)
+          .maybeSingle();
+      if (comment == null || comment['image'] == null) return;
+      List<String> images = List<String>.from(jsonDecode(comment['image']));
+      images.remove(commentImage);
+      await supabase
+          .from('comments')
+          .update({'image': jsonEncode(images)})
+          .eq('id', commentId);
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Future databaseDeleteAllCommentInASinglePost(final String postId) async {
     try {
       await supabase.from('comments').delete().eq('post_id', postId);
@@ -38,17 +77,10 @@ class CommentDatabaseService {
 
   Future databaseUpdateComments(
     final String comment,
-    final String? imageUrl,
     final String commentId,
   ) async {
     try {
-      if (imageUrl != null) {
-        await supabase
-            .from('comments')
-            .update({'comment': comment, 'image': imageUrl})
-            .eq('id', commentId);
-        // ignore: dead_code
-      } else {
+      if (comment.isNotEmpty) {
         await supabase
             .from('comments')
             .update({'comment': comment})
@@ -57,6 +89,17 @@ class CommentDatabaseService {
     } catch (e) {
       print(e);
     }
+  }
+
+  Future dataseUpdateCommentWithImage(
+    final List<String> imageUrl,
+    final String comment,
+    final String commentId,
+  ) async {
+    await supabase
+        .from('comments')
+        .update({'image': imageUrl, 'comment': comment})
+        .eq('id', commentId);
   }
 
   Future databaseUpdateDeleteImageComments(
