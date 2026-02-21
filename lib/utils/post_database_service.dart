@@ -38,6 +38,21 @@ class PostDatabaseService {
     });
   }
 
+  Future updateAuthor(String newUsername) async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) return;
+
+    try {
+      await supabase
+          .from('posts')
+          .update({'author': newUsername})
+          .eq('user_id', user.id);
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Future dataseUpdatePostWithImage(
     final String public,
     final List<String> imageUrl,

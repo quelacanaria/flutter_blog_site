@@ -14,6 +14,7 @@ class CommentDatabaseService {
         'comment': comment,
         'post_id': postId,
         'author': supabase.auth.currentUser!.userMetadata?['name'],
+        'user_id': supabase.auth.currentUser!.id,
       });
     } catch (e) {
       print(e);
@@ -31,6 +32,7 @@ class CommentDatabaseService {
         'image': imageUrl,
         'post_id': postId,
         'author': supabase.auth.currentUser!.userMetadata?['name'],
+        'user_id': supabase.auth.currentUser!.id,
       });
     } catch (e) {
       print(e);
@@ -100,6 +102,21 @@ class CommentDatabaseService {
         .from('comments')
         .update({'image': imageUrl, 'comment': comment})
         .eq('id', commentId);
+  }
+
+  Future updateCommentAuthor(String newUsername) async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) return;
+
+    try {
+      await supabase
+          .from('comments')
+          .update({'author': newUsername})
+          .eq('user_id', user.id);
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future databaseUpdateDeleteImageComments(
