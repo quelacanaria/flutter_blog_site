@@ -298,9 +298,9 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     final comment = _updateCommentController.text;
     try {
       if (comment.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('title and description are required!!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('please write a comment!!')));
         return;
       }
       if (_imageWebUpdate.isNotEmpty || _imageFileUpdate.isNotEmpty) {
@@ -356,12 +356,6 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                 children: [
                   _singlePostAndCommentInput(),
                   const SizedBox(height: 20),
-                  // _allCommentsInAPost(),
-                  // ViewAllComments(
-                  //   allComments: comments,
-                  //   postId: widget.postId,
-                  //   onChange: fetchAllCommentsInPost,
-                  // ),
                   commentContainer(),
                 ],
               ),
@@ -496,7 +490,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       physics: NeverScrollableScrollPhysics(),
       itemCount: kIsWeb ? _imageFilesWeb.length : _imageFiles.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 6,
+        crossAxisCount: 5,
         crossAxisSpacing: 4,
         mainAxisSpacing: 4,
       ),
@@ -652,15 +646,17 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: imageUrl.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 6,
+        crossAxisCount: 5,
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
       ),
       itemBuilder: (context, index) {
         return Stack(
           children: [
-            Positioned(
-              child: Image.network(imageUrl[index], fit: BoxFit.cover),
+            Center(
+              child: Positioned(
+                child: Image.network(imageUrl[index], fit: BoxFit.cover),
+              ),
             ),
           ],
         );
@@ -767,7 +763,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: totalCount,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 6,
+        crossAxisCount: 5,
         crossAxisSpacing: 4,
         mainAxisSpacing: 4,
       ),
@@ -789,11 +785,11 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                   onTap: () =>
                       deleteSingleImageInList(_imageCommentDatabaseUrl[index]),
                   child: CircleAvatar(
-                    radius: 15,
+                    radius: 12,
                     backgroundColor: Colors.black.withOpacity(0.6),
                     child: const Icon(
                       Icons.delete,
-                      size: 20,
+                      size: 14,
                       color: Colors.red,
                     ),
                   ),
@@ -828,9 +824,9 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                   });
                 },
                 child: CircleAvatar(
-                  radius: 15,
+                  radius: 12,
                   backgroundColor: Colors.black.withOpacity(0.6),
-                  child: const Icon(Icons.close, size: 20, color: Colors.white),
+                  child: const Icon(Icons.close, size: 14, color: Colors.white),
                 ),
               ),
             ),
