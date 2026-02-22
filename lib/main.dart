@@ -69,7 +69,8 @@ class MyApp extends StatelessWidget {
       GoRoute(path: '/viewSinglePost_page/:id', builder: (context, state) {
         final postId = state.pathParameters['id']!;
         return ViewSinglePost(postId: postId);
-      }) 
+      }),
+      
     ]);
 
     return MaterialApp.router(

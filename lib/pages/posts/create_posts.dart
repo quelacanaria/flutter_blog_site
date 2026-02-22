@@ -7,6 +7,7 @@ import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class CreatePosts extends StatefulWidget {
   const CreatePosts({super.key});
@@ -20,76 +21,79 @@ class _CreatePostsState extends State<CreatePosts> {
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
   bool _isPosting = false;
   String _postState = 'public';
-  File? _imageFile;
-  Uint8List? _imageFileWeb;
-
+  List<AssetEntity> _imageFiles = [];
+  List<Uint8List> _imageFilesWeb = [];
+  bool isLoading = true;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  Future pickImage() async {
+  Future pickImagesMobile() async {
+    final List<AssetEntity>? image = await AssetPicker.pickAssets(
+      context,
+      pickerConfig: AssetPickerConfig(
+        maxAssets: 20,
+        selectedAssets: _imageFiles,
+        requestType: RequestType.image,
+      ),
+    );
+    if (image != null) {
+      setState(() {
+        _imageFiles = image;
+      });
+    }
+  }
+
+  Future pickImagesWeb() async {
     final ImagePicker picker = ImagePicker();
     try {
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
+      final List<XFile> images = await picker.pickMultiImage();
+      if (images.isNotEmpty) {
         if (kIsWeb) {
-          final bytes = await image.readAsBytes();
+          List<Uint8List> webImages = [];
+          for (var image in images) {
+            final bytes = await image.readAsBytes();
+            webImages.add(bytes);
+          }
           setState(() {
-            _imageFile = null;
-            _imageFileWeb = bytes;
-          });
-        } else {
-          setState(() {
-            _imageFileWeb = null;
-            _imageFile = File(image.path);
+            _imageFilesWeb.addAll(webImages);
           });
         }
-      }
+      } else {}
     } catch (e) {
       print(e);
     }
   }
 
+  // dart format off
   Future createPosts() async {
-    if (_isPosting) return;
-    setState(() {
-      _isPosting = true;
-    });
+    if (_isPosting) return; 
+    setState(() {_isPosting = true;});
     final public = _postState;
     final title = _titleController.text;
     final description = _descriptionController.text;
     try {
-      if (title.trim() == '' || description.trim() == '') {
+      List<String> imageUrls = [];
+      if (title.trim().isEmpty || description.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Title and Description is required!!')),
         );
         return;
       }
-      if (_imageFile != null) {
-        final res = await _storageServicePost.uploadPostImage(
-          file: _imageFile!,
-        );
-        await _postDatabaseService.uploadPosts(public, res, title, description);
-      } else if (_imageFileWeb != null) {
-        final res = await _storageServicePost.uploadPostImage(
-          bytes: _imageFileWeb!,
-        );
-        await _postDatabaseService.uploadPosts(public, res, title, description);
-      } else {
-        await _postDatabaseService.uploadPosts(
-          public,
-          null,
-          title,
-          description,
-        );
-      }
+      if (_imageFiles.isNotEmpty) {
+        imageUrls = await _storageServicePost.storageUploadMultipleImages(assets: _imageFiles);
+      } else if (_imageFilesWeb.isNotEmpty) {
+        imageUrls = await _storageServicePost.storageUploadMultipleImages(bytesList: _imageFilesWeb,);
+      } 
+        await _postDatabaseService.databaseUploadPosts(public, imageUrls, title, description,);
+      
       _titleController.clear();
       _descriptionController.clear();
-      _imageFile = null;
-      _imageFileWeb = null;
+      _imageFiles = [];
+      _imageFilesWeb = [];
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Post Successfull')));
+        ).showSnackBar(SnackBar(content: Text('Successfully Post')));
       }
     } catch (e) {
       print(e);
@@ -156,87 +160,20 @@ class _CreatePostsState extends State<CreatePosts> {
                           ),
                           SizedBox(height: 10),
 
-                          if (_imageFileWeb != null) ...[
-                            Stack(
-                              children: [
-                                Container(
-                                  height: 300,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.zero,
-                                    image: DecorationImage(
-                                      image: MemoryImage(_imageFileWeb!),
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _imageFileWeb = null;
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.6),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ] else if (_imageFile != null) ...[
-                            Stack(
-                              children: [
-                                Container(
-                                  height: 300,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.zero,
-                                    image: DecorationImage(
-                                      image: FileImage(_imageFile!),
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _imageFile = null;
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.6),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ] else
-                            const Text('No image uploaded'),
+                          if (_imageFilesWeb.isNotEmpty) ...[
+                            showAllSelectedImagesWeb()
+                    ] else if (_imageFiles.isNotEmpty) ...[
+                            showAllSelectedImagesMobile()
+                    ] else const Text('No image uploaded'),
                           SizedBox(height: 10),
                           ElevatedButton(
-                            onPressed: pickImage,
+                            onPressed: (){
+                              if(kIsWeb){
+                                pickImagesWeb();
+                              }else{
+                                pickImagesMobile();
+                              }
+                            },
                             child: Text('Choose Image'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
@@ -299,4 +236,87 @@ class _CreatePostsState extends State<CreatePosts> {
       ),
     );
   }
+
+  Widget showAllSelectedImagesWeb(){
+    return GridView.builder( shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: _imageFilesWeb.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemBuilder: (context, index) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Image.memory(
+                _imageFilesWeb[index],
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _imageFilesWeb.removeAt(index);
+                  });
+                },
+                child: const CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.black54,
+                  child: Icon(Icons.close, size: 14, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+                     
+  }
+  Widget showAllSelectedImagesMobile(){
+    return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _imageFiles.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+        ),
+        itemBuilder: (context, index) {
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: AssetEntityImage(
+                  _imageFiles[index],
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _imageFiles.removeAt(index);
+                    });
+                  },
+                  child: const CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Colors.black54,
+                    child: Icon(Icons.close, size: 14, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    
+  }
+
 }

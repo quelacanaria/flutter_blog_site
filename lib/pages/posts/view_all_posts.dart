@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
+import 'package:flutter_blog_site/components/carousel_all_image.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
 import 'package:go_router/go_router.dart';
@@ -221,28 +225,29 @@ class _ViewPostsState extends State<ViewPosts> {
                                   ),
 
                                   const SizedBox(height: 8),
-                                  if (post['image'] != null)
-                                    Center(
-                                      child: ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                          minHeight: 200,
-                                          maxHeight: 300,
-                                        ),
-                                        child: AspectRatio(
-                                          aspectRatio: 1,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: NetworkImage(
-                                                  post['image'],
-                                                ),
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                  // if (post['image'] != null)
+                                  //   Center(
+                                  //     child: ConstrainedBox(
+                                  //       constraints: const BoxConstraints(
+                                  //         minHeight: 200,
+                                  //         maxHeight: 300,
+                                  //       ),
+                                  //       child: AspectRatio(
+                                  //         aspectRatio: 1,
+                                  //         child: Container(
+                                  //           decoration: BoxDecoration(
+                                  //             image: DecorationImage(
+                                  //               image: NetworkImage(
+                                  //                 post['image'],
+                                  //               ),
+                                  //               fit: BoxFit.cover,
+                                  //             ),
+                                  //           ),
+                                  //         ),
+                                  //       ),
+                                  //     ),
+                                  //   ),
+                                  displayAllImageInAPost(post),
                                   const SizedBox(height: 10),
                                   Text(
                                     post['description'] ?? '',
@@ -280,5 +285,18 @@ class _ViewPostsState extends State<ViewPosts> {
         ],
       ),
     );
+  }
+
+  Widget displayAllImageInAPost(final post) {
+    if (post['image'] == null) return const SizedBox.shrink();
+    List<String> images;
+    if (post['image'] is String) {
+      images = List<String>.from(jsonDecode(post['image']));
+    } else {
+      images = List<String>.from(post['image']);
+    }
+    if (images.isEmpty) return const SizedBox.shrink();
+
+    return CarouselImage(All: images);
   }
 }
