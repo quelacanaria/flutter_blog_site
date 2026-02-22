@@ -651,14 +651,10 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
         crossAxisSpacing: 4,
       ),
       itemBuilder: (context, index) {
-        return Stack(
-          children: [
-            Center(
-              child: Positioned(
-                child: Image.network(imageUrl[index], fit: BoxFit.cover),
-              ),
-            ),
-          ],
+        return Center(
+          child: Positioned(
+            child: Image.network(imageUrl[index], fit: BoxFit.cover),
+          ),
         );
       },
     );
