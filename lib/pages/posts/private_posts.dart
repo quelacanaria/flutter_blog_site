@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
+import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,10 +17,25 @@ class PrivatePosts extends StatefulWidget {
 
 class _PrivatePostsState extends State<PrivatePosts> {
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
+  final UserphotoDatabaseService _userphotoDatabaseService =
+      UserphotoDatabaseService();
   List<Map<String, dynamic>> posts = [];
   final SupabaseClient supabase = Supabase.instance.client;
   bool isLoading = true;
   String? postData;
+
+  Future<String?> FetchAllUserPhoto(String userId) async {
+    try {
+      final data = await _userphotoDatabaseService.databaseViewAllUsersPhoto(
+        userId,
+      );
+      return data;
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
   Future fetchPrivatePosts() async {
     try {
       final data = await _postDatabaseService.viewAllPrivatePosts();
@@ -112,10 +128,38 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                 children: [
                                   Row(
                                     children: [
-                                      const CircleAvatar(
-                                        radius: 18,
-                                        child: Icon(Icons.person),
+                                      FutureBuilder<String?>(
+                                        future: FetchAllUserPhoto(
+                                          post['user_id'],
+                                        ),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const CircleAvatar(
+                                              radius: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            );
+                                          }
+
+                                          if (snapshot.hasData &&
+                                              snapshot.data != null) {
+                                            return CircleAvatar(
+                                              radius: 20,
+                                              backgroundImage: NetworkImage(
+                                                snapshot.data!,
+                                              ),
+                                            );
+                                          }
+
+                                          return const CircleAvatar(
+                                            radius: 20,
+                                            child: Icon(Icons.person),
+                                          );
+                                        },
                                       ),
+
                                       const SizedBox(width: 10),
                                       Text(
                                         post['author'] ?? 'Unknown',
