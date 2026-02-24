@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
@@ -85,7 +86,9 @@ class _CreatePostsState extends State<CreatePosts> {
         imageUrls = await _storageServicePost.storageUploadMultipleImages(bytesList: _imageFilesWeb,);
       } 
         await _postDatabaseService.databaseUploadPosts(public, imageUrls, title, description,);
-      
+      if(public == 'private'){
+        context.push('/privatePosts_page');
+      }else{context.push('/viewPosts_page');}
       _titleController.clear();
       _descriptionController.clear();
       _imageFiles = [];

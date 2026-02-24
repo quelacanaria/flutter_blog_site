@@ -19,8 +19,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setUrlStrategy(PathUrlStrategy());
   await Supabase.initialize(
-    url: 'https://jwvmwlyhexouldycjwno.supabase.co',
-    anonKey: 'sb_publishable_SCcJ8CnZRzO6NVqxW13jhQ_BEw9r8TW',
+    // url: 'https://jwvmwlyhexouldycjwno.supabase.co',
+    // anonKey: 'sb_publishable_SCcJ8CnZRzO6NVqxW13jhQ_BEw9r8TW',
+    url: 'https://gwiahhodibdphgmhlgif.supabase.co',
+    anonKey: 'sb_publishable_GCCrFrYgOmSJT443xB5duw_usqDQiqA',
   );
   runApp(const MyApp());
 }

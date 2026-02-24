@@ -130,41 +130,41 @@ class _ViewPostsState extends State<ViewPosts> {
                                 children: [
                                   Row(
                                     children: [
-                                      // FutureBuilder<String?>(
-                                      //   future: FetchAllUserPhoto(
-                                      //     post['user_id'],
-                                      //   ),
-                                      //   builder: (context, snapshot) {
-                                      //     if (snapshot.connectionState ==
-                                      //         ConnectionState.waiting) {
-                                      //       return const CircleAvatar(
-                                      //         radius: 18,
-                                      //         child: CircularProgressIndicator(
-                                      //           strokeWidth: 2,
-                                      //         ),
-                                      //       );
-                                      //     }
+                                      FutureBuilder<String?>(
+                                        future: FetchAllUserPhoto(
+                                          post['user_id'],
+                                        ),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const CircleAvatar(
+                                              radius: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            );
+                                          }
 
-                                      //     if (snapshot.hasData &&
-                                      //         snapshot.data != null) {
-                                      //       return CircleAvatar(
-                                      //         radius: 18,
-                                      //         backgroundImage: NetworkImage(
-                                      //           snapshot.data!,
-                                      //         ),
-                                      //       );
-                                      //     }
+                                          if (snapshot.hasData &&
+                                              snapshot.data != null) {
+                                            return CircleAvatar(
+                                              radius: 20,
+                                              backgroundImage: NetworkImage(
+                                                snapshot.data!,
+                                              ),
+                                            );
+                                          }
 
-                                      //     return const CircleAvatar(
-                                      //       radius: 18,
-                                      //       child: Icon(Icons.person),
-                                      //     );
-                                      //   },
-                                      // ),
-                                      CircleAvatar(
-                                        radius: 18,
-                                        child: Icon(Icons.person),
+                                          return const CircleAvatar(
+                                            radius: 20,
+                                            child: Icon(Icons.person),
+                                          );
+                                        },
                                       ),
+                                      // CircleAvatar(
+                                      //   radius: 18,
+                                      //   child: Icon(Icons.person),
+                                      // ),
                                       const SizedBox(width: 10),
                                       Text(
                                         post['author'] ?? 'Unknown',
