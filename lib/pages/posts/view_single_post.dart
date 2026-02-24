@@ -10,6 +10,7 @@ import 'package:flutter_blog_site/pages/posts/view_all_comments.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
+import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -26,6 +27,8 @@ class ViewSinglePost extends StatefulWidget {
 class _ViewSinglePostState extends State<ViewSinglePost> {
   final SupabaseClient supabase = Supabase.instance.client;
   final StorageServicePost _storageServicePost = StorageServicePost();
+  final UserphotoDatabaseService _userphotoDatabaseService =
+      UserphotoDatabaseService();
   final CommentDatabaseService _commentDatabaseService =
       CommentDatabaseService();
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
@@ -43,11 +46,27 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   List<String> images = [];
   String? _title;
   String? _description;
+  String? user_id;
   bool _isUploadUpdate = false;
   bool isLoading = true;
   bool _isEditing = false;
+  bool _isDeleting = false;
+  String? _setDeletingId;
   String? _setEditingId;
+  String? _deletingComment;
   List<Map<String, dynamic>> comments = [];
+
+  Future<String?> FetchAllUserPhoto(String userId) async {
+    try {
+      final data = await _userphotoDatabaseService.databaseViewAllUsersPhoto(
+        userId,
+      );
+      return data;
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
 
   @override
   void initState() {
@@ -63,18 +82,20 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
         widget.postId,
       );
 
-      setState(() {
-        _author = post['author'];
-        if (post['image'] != null) {
-          _imageDatabaseUrl = List<String>.from(jsonDecode(post['image']));
-        } else {
-          _imageDatabaseUrl = List<String>.from(post['image']);
-        }
-        _title = post['title'];
-        _description = post['description'];
-
-        isLoading = false;
-      });
+      if (post != null) {
+        setState(() {
+          _author = post['author'];
+          if (post['image'] != null) {
+            _imageDatabaseUrl = List<String>.from(jsonDecode(post['image']));
+          } else {
+            _imageDatabaseUrl = List<String>.from(post['image']);
+          }
+          _title = post['title'];
+          _description = post['description'];
+          user_id = post['user_id'];
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print(e);
     }
@@ -90,6 +111,18 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       });
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<String?> fetchAllUserPhoto(String userId) async {
+    try {
+      final data = await _userphotoDatabaseService.databaseViewAllUsersPhoto(
+        userId,
+      );
+      return data;
+    } catch (e) {
+      print(e);
+      return null;
     }
   }
 
@@ -167,21 +200,32 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     }
   }
 
-  Future setEditingIdFn(
+  void setEditingIdFn(
     final String commentId,
     final String commentText,
     final List<String> commentImage,
-  ) async {
-    try {
-      setState(() {
-        _isEditing = true;
-        _setEditingId = commentId;
-        _updateCommentController.text = commentText;
-        _imageCommentDatabaseUrl = commentImage;
-      });
-    } catch (e) {
-      print(e);
-    }
+  ) {
+    setState(() {
+      _isEditing = true;
+      _setEditingId = commentId;
+      _updateCommentController.text = commentText;
+      _imageCommentDatabaseUrl = commentImage;
+      _setDeletingId = null;
+    });
+  }
+
+  void setDeletingIdFn(
+    final String commentId,
+    final String commentText,
+    final List<String> commentImage,
+  ) {
+    setState(() {
+      _isDeleting = true;
+      _setDeletingId = commentId;
+      _deletingComment = commentText;
+      _imageCommentDatabaseUrl = commentImage;
+      _setEditingId = null;
+    });
   }
 
   Future uploadComment() async {
@@ -245,16 +289,9 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     }
   }
 
-  Future deleteComment(final comment) async {
-    if (comment == null) return;
-
-    final String commentId = comment['id'];
-    List<String> imageUrl = [];
-    setState(() {
-      if (comment['image'] != null && comment['image'].toString().isNotEmpty) {
-        imageUrl = List<String>.from(jsonDecode(comment['image']));
-      }
-    });
+  Future deleteComment() async {
+    final String commentId = _setDeletingId!;
+    List<String> imageUrl = _imageCommentDatabaseUrl;
 
     try {
       print(imageUrl);
@@ -263,6 +300,10 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       }
       await _commentDatabaseService.databaseDeleteSingleComment(commentId);
       fetchAllCommentsInPost();
+      setState(() {
+        _setDeletingId = null;
+        images = [];
+      });
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -276,10 +317,18 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   Future deleteSingleImageInList(String url) async {
     try {
       await _storageServicePost.storageDeleteSingleImageInTheList(url);
-      await _commentDatabaseService.deleteDatabaseSinleImageToList(
-        url,
-        _setEditingId!,
-      );
+      if (_setEditingId != null) {
+        await _commentDatabaseService.deleteDatabaseSinleImageToList(
+          url,
+          _setEditingId!,
+        );
+      } else if (_setDeletingId != null) {
+        await _commentDatabaseService.deleteDatabaseSinleImageToList(
+          url,
+          _setDeletingId!,
+        );
+      }
+
       fetchAllCommentsInPost();
       setState(() {
         _imageCommentDatabaseUrl.remove(url);
@@ -333,7 +382,10 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
         );
       }
       fetchAllCommentsInPost();
-
+      setState(() {
+        _setEditingId = null;
+        images = [];
+      });
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -391,9 +443,33 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                       children: [
                         Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 25,
-                              child: Icon(Icons.person),
+                            FutureBuilder<String?>(
+                              future: FetchAllUserPhoto(user_id!),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const CircleAvatar(
+                                    radius: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  );
+                                }
+
+                                if (snapshot.hasData && snapshot.data != null) {
+                                  return CircleAvatar(
+                                    radius: 20,
+                                    backgroundImage: NetworkImage(
+                                      snapshot.data!,
+                                    ),
+                                  );
+                                }
+
+                                return const CircleAvatar(
+                                  radius: 20,
+                                  child: Icon(Icons.person),
+                                );
+                              },
                             ),
                             const SizedBox(width: 20),
                             Text(
@@ -567,10 +643,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
               children: [
                 Row(
                   children: [
-                    const CircleAvatar(
-                      radius: 20,
-                      child: Icon(Icons.person, size: 20),
-                    ),
+                    displayAllUserPhoto(comment),
                     const SizedBox(width: 10),
                     Text(
                       '${comment['author'] ?? ''}',
@@ -609,7 +682,17 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                           }
 
                           if (value == 1) {
-                            await deleteComment(comment);
+                            if (comment['image'] != null &&
+                                comment['image'].toString().isNotEmpty) {
+                              images = List<String>.from(
+                                jsonDecode(comment['image']),
+                              );
+                            }
+                            setDeletingIdFn(
+                              comment['id'],
+                              comment['comment'],
+                              images,
+                            );
                           }
                         },
                       ),
@@ -618,6 +701,8 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                 ),
                 if (_setEditingId == comment['id']) ...[
                   showEditingForm(),
+                ] else if (_setDeletingId == comment['id']) ...[
+                  deletingModal(),
                 ] else ...[
                   if (comment['image'] != null)
                     Padding(
@@ -636,6 +721,27 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
             ),
           ),
         );
+      },
+    );
+  }
+
+  Widget displayAllUserPhoto(final comment) {
+    return FutureBuilder<String?>(
+      future: fetchAllUserPhoto(comment['user_id']),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircleAvatar(
+            radius: 20,
+            child: const CircularProgressIndicator(strokeWidth: 2),
+          );
+        }
+        if (snapshot.hasData && snapshot.data != null) {
+          return CircleAvatar(
+            radius: 20,
+            backgroundImage: NetworkImage(snapshot.data!),
+          );
+        }
+        return CircleAvatar(radius: 20, child: Icon(Icons.person));
       },
     );
   }
@@ -718,6 +824,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                     onPressed: () {
                       setState(() {
                         _setEditingId = null;
+                        images = [];
                       });
                     },
                     style: ElevatedButton.styleFrom(
@@ -727,7 +834,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text('Close'),
+                    child: const Text('Cancel'),
                   ),
                 ),
                 SizedBox(width: 10),
@@ -743,6 +850,74 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                       ),
                     ),
                     child: const Text('Update'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget deletingModal() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Are you sure you want to delete this comment?',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            SizedBox(height: 10),
+            showAllImages(),
+            SizedBox(height: 15),
+            Row(
+              children: [Text('${_deletingComment ?? ''}'), SizedBox(width: 5)],
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _setDeletingId = null;
+                        images = [];
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.indigo,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                SizedBox(width: 10),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () => deleteComment(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Delete'),
                   ),
                 ),
               ],

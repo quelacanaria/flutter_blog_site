@@ -195,6 +195,9 @@ class _SettingsPageState extends State<SettingsPage> {
       _postDatabaseService.updateAuthor(name);
       _commentDatabaseService.updateCommentAuthor(name);
       _name = name;
+      setState(() {
+        isEditingName = false;
+      });
       if (mounted) {
         ScaffoldMessenger.of(
           context,
