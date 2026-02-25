@@ -159,7 +159,6 @@ class _DeletePostsState extends State<DeletePosts> {
                                     color: Colors.grey,
                                   ),
                                 ),
-                                SizedBox(height: 10),
                                 CarouselImage(All: _imageDatabaseUrl),
                                 SizedBox(height: 15),
                                 Text(

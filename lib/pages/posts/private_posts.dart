@@ -210,7 +210,6 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                         ),
                                     ],
                                   ),
-                                  const SizedBox(height: 12),
                                   Text(
                                     DateTimeHelper.timeAgo(post['created_at']),
                                     style: const TextStyle(
@@ -218,7 +217,7 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                       color: Colors.grey,
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
+                                  SizedBox(height: 2),
                                   Text(
                                     post['title'] ?? '',
                                     style: const TextStyle(
