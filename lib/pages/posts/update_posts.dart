@@ -283,13 +283,6 @@ class _UpdatePostsState extends State<UpdatePosts> {
                                         );
                                       },
                                     ),
-                                    Text(
-                                      DateTimeHelper.timeAgo(_created_at),
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
                                     const SizedBox(width: 20),
                                     Text(
                                       _author ?? '',
@@ -300,8 +293,14 @@ class _UpdatePostsState extends State<UpdatePosts> {
                                     ),
                                   ],
                                 ),
-
-                                SizedBox(height: 10),
+                                SizedBox(height: 5),
+                                Text(
+                                  DateTimeHelper.timeAgo(_created_at),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                                 RadioListTile<String>(
                                   title: Text('public'),
                                   value: 'public',

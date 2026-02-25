@@ -214,7 +214,6 @@ class _ViewPostsState extends State<ViewPosts> {
                                         ),
                                     ],
                                   ),
-                                  const SizedBox(height: 12),
                                   Text(
                                     DateTimeHelper.timeAgo(post['created_at']),
                                     style: const TextStyle(
