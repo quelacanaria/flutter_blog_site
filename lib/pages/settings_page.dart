@@ -148,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _imageFile = null;
         _imageFileWeb = null;
       });
-
+      context.pushReplacement('/settings_page');
       if (mounted) {
         ScaffoldMessenger.of(
           context,

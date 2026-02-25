@@ -3,7 +3,9 @@ import 'package:flutter_blog_site/auth/auth_service.dart';
 import 'package:flutter_blog_site/pages/posts/create_posts.dart';
 import 'package:flutter_blog_site/pages/posts/view_all_posts.dart';
 import 'package:flutter_blog_site/pages/profile_page.dart';
+import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Navbar extends StatefulWidget implements PreferredSizeWidget {
   const Navbar({super.key});
@@ -15,13 +17,33 @@ class Navbar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _NavbarState extends State<Navbar> {
+  final UserphotoDatabaseService _userphotoDatabaseService =
+      UserphotoDatabaseService();
   final authService = AuthService();
   UserData? currentUser;
-
+  String? imageUserUrl;
+  bool _isFetching = true;
   @override
   void initState() {
     super.initState();
     currentUser = authService.getCurrentUserData();
+    fetchProfileImage();
+  }
+
+  Future fetchProfileImage() async {
+    try {
+      final res = await _userphotoDatabaseService.viewSingleUserPhoto();
+      if (!mounted) return;
+      setState(() {
+        imageUserUrl = res?['image'];
+
+        _isFetching = false;
+      });
+    } on PostgrestException catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+    }
   }
 
   void logout() async {
@@ -75,10 +97,18 @@ class _NavbarState extends State<Navbar> {
           ),
 
           PopupMenuButton<int>(
-            icon: const CircleAvatar(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.indigo,
-              child: Icon(Icons.person),
+            icon: CircleAvatar(
+              radius: 18,
+              backgroundImage: imageUserUrl != null
+                  ? NetworkImage(imageUserUrl!)
+                  : null,
+              child: imageUserUrl == null
+                  ? CircleAvatar(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.indigo,
+                      child: const Icon(Icons.person, size: 18),
+                    )
+                  : null,
             ),
             offset: const Offset(0, 50),
             color: Colors.indigo,
