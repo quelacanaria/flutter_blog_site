@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blog_site/components/date_time.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
@@ -36,6 +37,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
   bool _isUpdating = false;
   String? _postId;
   String? user_id;
+  String? _created_at;
   bool isLoading = true;
 
   Future<String?> FetchAllUserPhoto(String userId) async {
@@ -109,6 +111,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
         _author = post['author'];
         _postId = post['id'];
         user_id = post['user_id'];
+        _created_at = post['created_at'];
         if (post['image'] != null) {
           _databasePostImageUrl = List<String>.from(jsonDecode(post['image']));
         } else {
@@ -279,6 +282,13 @@ class _UpdatePostsState extends State<UpdatePosts> {
                                           child: Icon(Icons.person),
                                         );
                                       },
+                                    ),
+                                    Text(
+                                      DateTimeHelper.timeAgo(_created_at),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                     const SizedBox(width: 20),
                                     Text(
