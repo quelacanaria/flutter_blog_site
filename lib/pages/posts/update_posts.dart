@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
+import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +23,8 @@ class UpdatePosts extends StatefulWidget {
 class _UpdatePostsState extends State<UpdatePosts> {
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
   final StorageServicePost _storageServicePost = StorageServicePost();
+  final UserphotoDatabaseService _userphotoDatabaseService =
+      UserphotoDatabaseService();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final SupabaseClient supabase = Supabase.instance.client;
@@ -32,7 +35,20 @@ class _UpdatePostsState extends State<UpdatePosts> {
   List<Uint8List> _imageFilesWeb = [];
   bool _isUpdating = false;
   String? _postId;
+  String? user_id;
   bool isLoading = true;
+
+  Future<String?> FetchAllUserPhoto(String userId) async {
+    try {
+      final data = await _userphotoDatabaseService.databaseViewAllUsersPhoto(
+        userId,
+      );
+      return data;
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
 
   Future pickImagesWeb() async {
     final ImagePicker picker = ImagePicker();
@@ -92,6 +108,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
         _public = post['Public'];
         _author = post['author'];
         _postId = post['id'];
+        user_id = post['user_id'];
         if (post['image'] != null) {
           _databasePostImageUrl = List<String>.from(jsonDecode(post['image']));
         } else {
@@ -234,9 +251,34 @@ class _UpdatePostsState extends State<UpdatePosts> {
                               children: [
                                 Row(
                                   children: [
-                                    const CircleAvatar(
-                                      radius: 25,
-                                      child: Icon(Icons.person),
+                                    FutureBuilder<String?>(
+                                      future: FetchAllUserPhoto(user_id!),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return const CircleAvatar(
+                                            radius: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          );
+                                        }
+
+                                        if (snapshot.hasData &&
+                                            snapshot.data != null) {
+                                          return CircleAvatar(
+                                            radius: 20,
+                                            backgroundImage: NetworkImage(
+                                              snapshot.data!,
+                                            ),
+                                          );
+                                        }
+
+                                        return const CircleAvatar(
+                                          radius: 20,
+                                          child: Icon(Icons.person),
+                                        );
+                                      },
                                     ),
                                     const SizedBox(width: 20),
                                     Text(

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
+import 'package:flutter_blog_site/components/date_time.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
@@ -209,7 +210,14 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                         ),
                                     ],
                                   ),
-
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    DateTimeHelper.timeAgo(post['created_at']),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                   const SizedBox(height: 12),
                                   Text(
                                     post['title'] ?? '',

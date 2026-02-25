@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
+import 'package:flutter_blog_site/components/date_time.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/pages/posts/view_all_comments.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
@@ -46,6 +47,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   List<String> images = [];
   String? _title;
   String? _description;
+  String? _created_At;
   String? user_id;
   bool _isUploadUpdate = false;
   bool isLoading = true;
@@ -92,6 +94,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
           }
           _title = post['title'];
           _description = post['description'];
+          _created_At = post['created_at'];
           user_id = post['user_id'];
           isLoading = false;
         });
@@ -481,6 +484,14 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        Text(
+                          DateTimeHelper.timeAgo(_created_At),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                         SizedBox(height: 20),
                         Text(
                           '$_title',
@@ -698,6 +709,10 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                       ),
                     ],
                   ],
+                ),
+                Text(
+                  DateTimeHelper.timeAgo(comment['created_at']),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 if (_setEditingId == comment['id']) ...[
                   showEditingForm(),
