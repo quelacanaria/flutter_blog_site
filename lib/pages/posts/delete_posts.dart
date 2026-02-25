@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
+import 'package:flutter_blog_site/components/date_time.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/comment_database_service.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
@@ -25,6 +26,7 @@ class _DeletePostsState extends State<DeletePosts> {
   List<String> _imageDatabaseUrl = [];
   String? _description;
   String? _postId;
+  String? _created_at;
   bool isLoading = true;
 
   @override
@@ -48,6 +50,7 @@ class _DeletePostsState extends State<DeletePosts> {
           }
           _description = post['description'];
           _postId = post['id'];
+          _created_at = post['created_at'];
           isLoading = false;
         });
       }
@@ -147,6 +150,13 @@ class _DeletePostsState extends State<DeletePosts> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 25,
+                                  ),
+                                ),
+                                Text(
+                                  DateTimeHelper.timeAgo(_created_at),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
                                   ),
                                 ),
                                 SizedBox(height: 10),
