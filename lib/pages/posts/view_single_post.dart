@@ -744,12 +744,12 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
     return FutureBuilder<String?>(
       future: fetchAllUserPhoto(comment['user_id']),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircleAvatar(
-            radius: 20,
-            child: const CircularProgressIndicator(strokeWidth: 2),
-          );
-        }
+        // if (snapshot.connectionState == ConnectionState.waiting) {
+        //   return const CircleAvatar(
+        //     radius: 20,
+        //     child: const CircularProgressIndicator(strokeWidth: 2),
+        //   );
+        // }
         if (snapshot.hasData && snapshot.data != null) {
           return CircleAvatar(
             radius: 20,

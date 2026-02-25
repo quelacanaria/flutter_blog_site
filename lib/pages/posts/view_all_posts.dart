@@ -135,15 +135,15 @@ class _ViewPostsState extends State<ViewPosts> {
                                           post['user_id'],
                                         ),
                                         builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const CircleAvatar(
-                                              radius: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            );
-                                          }
+                                          // if (snapshot.connectionState ==
+                                          //     ConnectionState.waiting) {
+                                          //   return const CircleAvatar(
+                                          //     radius: 20,
+                                          //     child: CircularProgressIndicator(
+                                          //       strokeWidth: 2,
+                                          //     ),
+                                          //   );
+                                          // }
 
                                           if (snapshot.hasData &&
                                               snapshot.data != null) {
