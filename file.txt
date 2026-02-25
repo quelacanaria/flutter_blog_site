@@ -2,6 +2,7 @@
 2. flutter pub add flutter_dotenv
 3. flutter pub add image_picker
 4. flutter pub add flutter_launcher_icons
+5. flutter pub add intl
 
 flutter build web --release \
 --dart-define=SUPABASE_URL=https://your-project.supabase.co \

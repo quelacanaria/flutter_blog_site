@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_blog_site/components/date_time.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
@@ -25,7 +26,6 @@ class _ViewPostsState extends State<ViewPosts> {
   final SupabaseClient supabase = Supabase.instance.client;
   bool isLoading = true;
   String? postData;
-
   Future<String?> FetchAllUserPhoto(String userId) async {
     try {
       final data = await _userphotoDatabaseService.databaseViewAllUsersPhoto(
@@ -214,7 +214,14 @@ class _ViewPostsState extends State<ViewPosts> {
                                         ),
                                     ],
                                   ),
-
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    DateTimeHelper.timeAgo(post['created_at']),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                   const SizedBox(height: 12),
                                   Text(
                                     post['title'] ?? '',
