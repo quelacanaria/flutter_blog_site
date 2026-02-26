@@ -131,7 +131,6 @@ class _ViewPostsState extends State<ViewPosts> {
                                     children: [
                                       CircleAvatar(
                                         radius: 20,
-                                        backgroundColor: Colors.grey[200],
                                         child: ClipOval(
                                           child: imageUrl != null
                                               ? CachedNetworkImage(

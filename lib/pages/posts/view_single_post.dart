@@ -57,6 +57,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   String? _setDeletingId;
   String? _setEditingId;
   String? _deletingComment;
+  String? imageUrl;
   late final _user_image;
   List<Map<String, dynamic>> comments = [];
 
@@ -141,7 +142,18 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
           List<Uint8List> webImages = [];
           for (var image in images) {
             final bytes = await image.readAsBytes();
-            webImages.add(bytes);
+            final sizeInMB = bytes.lengthInBytes / (1024 * 1024);
+            if (sizeInMB <= 5) {
+              webImages.add(bytes);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Skipped ${image.name} (size less than 5MB) is accepted',
+                  ),
+                ),
+              );
+            }
           }
           setState(() {
             _imageFilesWeb.addAll(webImages);
@@ -163,8 +175,26 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       ),
     );
     if (image != null) {
+      List<AssetEntity> filtered = [];
+      for (var img in image) {
+        final file = await img.originFile;
+        if (file != null) {
+          final sizedInMB = file.lengthSync() / (1024 * 1024);
+          if (sizedInMB <= 5) {
+            filtered.add(img);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Skipped ${img.title} (size less than 5MB) is accepted',
+                ),
+              ),
+            );
+          }
+        }
+      }
       setState(() {
-        _imageFiles = image;
+        _imageFiles = filtered;
       });
     }
   }
@@ -179,8 +209,26 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
       ),
     );
     if (image != null) {
+      List<AssetEntity> filtered = [];
+      for (var img in image) {
+        final file = await img.originFile;
+        if (file != null) {
+          final sizedInMB = file.lengthSync() / (1024 * 1024);
+          if (sizedInMB <= 5) {
+            filtered.add(img);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Skipped ${img.title} (size less than 5MB) is accepted',
+                ),
+              ),
+            );
+          }
+        }
+      }
       setState(() {
-        _imageFileUpdate = image;
+        _imageFileUpdate = filtered;
       });
     }
   }
@@ -194,7 +242,18 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
           List<Uint8List> webImages = [];
           for (var image in images) {
             final bytes = await image.readAsBytes();
-            webImages.add(bytes);
+            final sizeInMB = bytes.lengthInBytes / (1024 * 1024);
+            if (sizeInMB <= 5) {
+              webImages.add(bytes);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Skipped ${image.name} (size less than 5MB) is accepted',
+                  ),
+                ),
+              );
+            }
           }
           setState(() {
             _imageWebUpdate.addAll(webImages);
@@ -734,23 +793,20 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   }
 
   Widget displayAllUserPhoto(final comment) {
-    return FutureBuilder<String?>(
-      future: fetchAllUserPhoto(comment['user_id']),
-      builder: (context, snapshot) {
-        // if (snapshot.connectionState == ConnectionState.waiting) {
-        //   return const CircleAvatar(
-        //     radius: 20,
-        //     child: const CircularProgressIndicator(strokeWidth: 2),
-        //   );
-        // }
-        if (snapshot.hasData && snapshot.data != null) {
-          return CircleAvatar(
-            radius: 20,
-            backgroundImage: NetworkImage(snapshot.data!),
-          );
-        }
-        return CircleAvatar(radius: 20, child: Icon(Icons.person));
-      },
+    return CircleAvatar(
+      radius: 20,
+      child: ClipOval(
+        child: comment['user_image'] != null
+            ? CachedNetworkImage(
+                imageUrl: comment['user_image'],
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Icon(Icons.person),
+                errorWidget: (context, url, error) => const Icon(Icons.person),
+              )
+            : const Icon(Icons.person),
+      ),
     );
   }
 

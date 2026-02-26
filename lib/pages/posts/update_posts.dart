@@ -47,13 +47,24 @@ class _UpdatePostsState extends State<UpdatePosts> {
           List<Uint8List> webImages = [];
           for (var image in images) {
             final bytes = await image.readAsBytes();
-            webImages.add(bytes);
+            final sizeInMB = bytes.lengthInBytes / (1024 * 1024);
+            if (sizeInMB <= 5) {
+              webImages.add(bytes);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Skipped ${image.name} (size less than 5MB) is accepted',
+                  ),
+                ),
+              );
+            }
           }
           setState(() {
             _imageFilesWeb.addAll(webImages);
           });
         }
-      }
+      } else {}
     } catch (e) {
       print(e);
     }
@@ -70,8 +81,26 @@ class _UpdatePostsState extends State<UpdatePosts> {
         ),
       );
       if (image != null) {
+        List<AssetEntity> filtered = [];
+        for (var img in image) {
+          final file = await img.originFile;
+          if (file != null) {
+            final sizedInMB = file.lengthSync() / (1024 * 1024);
+            if (sizedInMB <= 5) {
+              filtered.add(img);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Skipped ${img.title} (size less than 5MB) is accepted',
+                  ),
+                ),
+              );
+            }
+          }
+        }
         setState(() {
-          _imageFiles = image;
+          _imageFiles = filtered;
         });
       }
     } catch (e) {

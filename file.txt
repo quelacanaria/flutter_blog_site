@@ -18,3 +18,11 @@ SELECT
 FROM posts p
 LEFT JOIN userphoto u
 ON p.user_id = u.user_id;
+
+CREATE VIEW comments_with_photo AS
+SELECT 
+  c.*,
+  u.image AS user_image
+FROM comments c
+LEFT JOIN userphoto u
+ON c.user_id = u.user_id;

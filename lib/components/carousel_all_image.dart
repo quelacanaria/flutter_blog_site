@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class CarouselImage extends StatefulWidget {
@@ -40,15 +41,13 @@ class _CarouselImageState extends State<CarouselImage> {
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      images[index],
+                    child: CachedNetworkImage(
+                      imageUrl: images[index],
                       fit: BoxFit.contain,
                       width: double.infinity,
-                      loadingBuilder: (context, child, progress) {
-                        if (progress == null) return child;
-                        return const Center(child: CircularProgressIndicator());
-                      },
-                      errorBuilder: (context, error, stackTrace) {
+                      placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, error, stackTrace) {
                         return const Center(child: Icon(Icons.broken_image));
                       },
                     ),
