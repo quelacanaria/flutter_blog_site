@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/auth/auth_service.dart';
@@ -78,10 +78,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future pickImage() async {
     final ImagePicker picker = ImagePicker();
-
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+    final sizedInBytes = await image.length();
+    final sizedInBM = sizedInBytes / (1024 * 1024);
 
-    if (image != null) {
+    if (sizedInBM <= 5) {
       final bytes = await image.readAsBytes();
       if (kIsWeb) {
         setState(() {
@@ -89,11 +91,18 @@ class _SettingsPageState extends State<SettingsPage> {
           _imageFileWeb = bytes;
         });
       } else {
+        final file = File(image.path);
         setState(() {
           _imageFileWeb = null;
-          _imageFile = File(image.path);
+          _imageFile = file;
         });
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('skipped ${image.name} (less than 5MB) is Accepted'),
+        ),
+      );
     }
   }
 
@@ -291,8 +300,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                                   aspectRatio: 1,
                                                   child: ClipOval(
                                                     child: imageUserUrl != null
-                                                        ? Image.network(
-                                                            imageUserUrl!,
+                                                        ? CachedNetworkImage(
+                                                            imageUrl:
+                                                                imageUserUrl!,
                                                             height: 200,
                                                             fit: BoxFit.cover,
                                                           )

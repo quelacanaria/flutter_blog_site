@@ -140,7 +140,7 @@ class CommentDatabaseService {
   ) async {
     try {
       final res = await supabase
-          .from('comments')
+          .from('comments_with_photo')
           .select()
           .eq('post_id', postId)
           .order('created_at', ascending: false);
