@@ -100,7 +100,8 @@ class _NavbarState extends State<Navbar> {
           PopupMenuButton<int>(
             icon: CircleAvatar(
               radius: 20,
-              backgroundColor: Colors.grey[200],
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.indigo,
               child: ClipOval(
                 child: imageUserUrl != null
                     ? CachedNetworkImage(
