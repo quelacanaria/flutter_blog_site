@@ -37,6 +37,8 @@ class _NavbarState extends State<Navbar> {
       if (!mounted) return;
       setState(() {
         imageUserUrl = res?['image'];
+
+        _isFetching = false;
       });
     } on PostgrestException catch (e) {
       ScaffoldMessenger.of(
@@ -106,9 +108,6 @@ class _NavbarState extends State<Navbar> {
                         width: 40,
                         height: 40,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => const Icon(Icons.person),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.person),
                       )
                     : const Icon(Icons.person),
               ),
@@ -139,7 +138,7 @@ class _NavbarState extends State<Navbar> {
               if (value == 0)
                 {}
               else if (value == 1)
-                {context.pushReplacement('/settings_page')}
+                {context.push('/settings_page')}
               else if (value == 2)
                 {logout()}
               else
