@@ -121,7 +121,7 @@ class PostDatabaseService {
   Future<List<Map<String, dynamic>>> viewAllPosts() async {
     try {
       final res = await supabase
-          .from('posts')
+          .from('posts_with_photo')
           .select()
           .eq('Public', 'public')
           .order('created_at', ascending: false);
@@ -136,7 +136,7 @@ class PostDatabaseService {
   Future<List<Map<String, dynamic>>> viewAllPrivatePosts() async {
     try {
       final res = await supabase
-          .from('posts')
+          .from('posts_with_photo')
           .select()
           .eq('Public', 'private')
           .eq('user_id', supabase.auth.currentUser!.id)
@@ -152,7 +152,7 @@ class PostDatabaseService {
   Future databasefetchSinglePost(final postId) async {
     try {
       final res = await supabase
-          .from('posts')
+          .from('posts_with_photo')
           .select()
           .eq('id', postId)
           .single();

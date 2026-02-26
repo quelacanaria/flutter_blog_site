@@ -7,3 +7,14 @@
 flutter build web --release \
 --dart-define=SUPABASE_URL=https://your-project.supabase.co \
 --dart-define=SUPABASE_ANON_KEY=your-anon-key
+
+
+SQL Editor
+
+CREATE VIEW posts_with_photo AS
+SELECT 
+  p.*,
+  u.image AS user_image
+FROM posts p
+LEFT JOIN userphoto u
+ON p.user_id = u.user_id;

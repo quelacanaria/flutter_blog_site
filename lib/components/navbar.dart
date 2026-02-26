@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/auth/auth_service.dart';
 import 'package:flutter_blog_site/pages/posts/create_posts.dart';
@@ -36,8 +37,6 @@ class _NavbarState extends State<Navbar> {
       if (!mounted) return;
       setState(() {
         imageUserUrl = res?['image'];
-
-        _isFetching = false;
       });
     } on PostgrestException catch (e) {
       ScaffoldMessenger.of(
@@ -98,17 +97,21 @@ class _NavbarState extends State<Navbar> {
 
           PopupMenuButton<int>(
             icon: CircleAvatar(
-              radius: 18,
-              backgroundImage: imageUserUrl != null
-                  ? NetworkImage(imageUserUrl!)
-                  : null,
-              child: imageUserUrl == null
-                  ? CircleAvatar(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.indigo,
-                      child: const Icon(Icons.person, size: 18),
-                    )
-                  : null,
+              radius: 20,
+              backgroundColor: Colors.grey[200],
+              child: ClipOval(
+                child: imageUserUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: imageUserUrl!,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Icon(Icons.person),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.person),
+                      )
+                    : const Icon(Icons.person),
+              ),
             ),
             offset: const Offset(0, 50),
             color: Colors.indigo,
@@ -136,7 +139,7 @@ class _NavbarState extends State<Navbar> {
               if (value == 0)
                 {}
               else if (value == 1)
-                {context.push('/settings_page')}
+                {context.pushReplacement('/settings_page')}
               else if (value == 2)
                 {logout()}
               else
