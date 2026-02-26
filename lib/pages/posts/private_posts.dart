@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
 import 'package:flutter_blog_site/components/date_time.dart';
@@ -109,6 +110,7 @@ class _PrivatePostsState extends State<PrivatePosts> {
                     itemCount: posts.length,
                     itemBuilder: (context, index) {
                       final post = posts[index];
+                      final imageUrl = post['user_image'];
 
                       return Center(
                         child: ConstrainedBox(
@@ -129,38 +131,27 @@ class _PrivatePostsState extends State<PrivatePosts> {
                                 children: [
                                   Row(
                                     children: [
-                                      FutureBuilder<String?>(
-                                        future: FetchAllUserPhoto(
-                                          post['user_id'],
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.grey[200],
+                                        child: ClipOval(
+                                          child: imageUrl != null
+                                              ? CachedNetworkImage(
+                                                  imageUrl: imageUrl,
+                                                  width: 40,
+                                                  height: 40,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) =>
+                                                      const Icon(Icons.person),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          const Icon(
+                                                            Icons.person,
+                                                          ),
+                                                )
+                                              : const Icon(Icons.person),
                                         ),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const CircleAvatar(
-                                              radius: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            );
-                                          }
-
-                                          if (snapshot.hasData &&
-                                              snapshot.data != null) {
-                                            return CircleAvatar(
-                                              radius: 20,
-                                              backgroundImage: NetworkImage(
-                                                snapshot.data!,
-                                              ),
-                                            );
-                                          }
-
-                                          return const CircleAvatar(
-                                            radius: 20,
-                                            child: Icon(Icons.person),
-                                          );
-                                        },
                                       ),
-
                                       const SizedBox(width: 10),
                                       Text(
                                         post['author'] ?? 'Unknown',

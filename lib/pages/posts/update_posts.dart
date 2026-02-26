@@ -1,13 +1,12 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/date_time.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
 import 'package:flutter_blog_site/utils/post_database_service.dart';
 import 'package:flutter_blog_site/utils/storage_service_post.dart';
-import 'package:flutter_blog_site/utils/userphoto_database_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,8 +23,6 @@ class UpdatePosts extends StatefulWidget {
 class _UpdatePostsState extends State<UpdatePosts> {
   final PostDatabaseService _postDatabaseService = PostDatabaseService();
   final StorageServicePost _storageServicePost = StorageServicePost();
-  final UserphotoDatabaseService _userphotoDatabaseService =
-      UserphotoDatabaseService();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final SupabaseClient supabase = Supabase.instance.client;
@@ -38,19 +35,8 @@ class _UpdatePostsState extends State<UpdatePosts> {
   String? _postId;
   String? user_id;
   String? _created_at;
+  late final _user_image;
   bool isLoading = true;
-
-  Future<String?> FetchAllUserPhoto(String userId) async {
-    try {
-      final data = await _userphotoDatabaseService.databaseViewAllUsersPhoto(
-        userId,
-      );
-      return data;
-    } catch (e) {
-      print(e);
-      return null;
-    }
-  }
 
   Future pickImagesWeb() async {
     final ImagePicker picker = ImagePicker();
@@ -112,6 +98,7 @@ class _UpdatePostsState extends State<UpdatePosts> {
         _postId = post['id'];
         user_id = post['user_id'];
         _created_at = post['created_at'];
+        _user_image = post['user_image'];
         if (post['image'] != null) {
           _databasePostImageUrl = List<String>.from(jsonDecode(post['image']));
         } else {
@@ -254,34 +241,26 @@ class _UpdatePostsState extends State<UpdatePosts> {
                               children: [
                                 Row(
                                   children: [
-                                    FutureBuilder<String?>(
-                                      future: FetchAllUserPhoto(user_id!),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const CircleAvatar(
-                                            radius: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          );
-                                        }
-
-                                        if (snapshot.hasData &&
-                                            snapshot.data != null) {
-                                          return CircleAvatar(
-                                            radius: 20,
-                                            backgroundImage: NetworkImage(
-                                              snapshot.data!,
-                                            ),
-                                          );
-                                        }
-
-                                        return const CircleAvatar(
-                                          radius: 20,
-                                          child: Icon(Icons.person),
-                                        );
-                                      },
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: Colors.grey[200],
+                                      child: ClipOval(
+                                        child: _user_image != null
+                                            ? CachedNetworkImage(
+                                                imageUrl: _user_image,
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                                placeholder: (context, url) =>
+                                                    const Icon(Icons.person),
+                                                errorWidget:
+                                                    (context, url, error) =>
+                                                        const Icon(
+                                                          Icons.person,
+                                                        ),
+                                              )
+                                            : const Icon(Icons.person),
+                                      ),
                                     ),
                                     const SizedBox(width: 20),
                                     Text(

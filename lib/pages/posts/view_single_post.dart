@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/carousel_all_image.dart';
@@ -56,6 +57,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
   String? _setDeletingId;
   String? _setEditingId;
   String? _deletingComment;
+  late final _user_image;
   List<Map<String, dynamic>> comments = [];
 
   Future<String?> FetchAllUserPhoto(String userId) async {
@@ -96,6 +98,7 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
           _description = post['description'];
           _created_At = post['created_at'];
           user_id = post['user_id'];
+          _user_image = post['user_image'];
           isLoading = false;
         });
       }
@@ -446,33 +449,23 @@ class _ViewSinglePostState extends State<ViewSinglePost> {
                       children: [
                         Row(
                           children: [
-                            FutureBuilder<String?>(
-                              future: FetchAllUserPhoto(user_id!),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const CircleAvatar(
-                                    radius: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  );
-                                }
-
-                                if (snapshot.hasData && snapshot.data != null) {
-                                  return CircleAvatar(
-                                    radius: 20,
-                                    backgroundImage: NetworkImage(
-                                      snapshot.data!,
-                                    ),
-                                  );
-                                }
-
-                                return const CircleAvatar(
-                                  radius: 20,
-                                  child: Icon(Icons.person),
-                                );
-                              },
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Colors.grey[200],
+                              child: ClipOval(
+                                child: _user_image != null
+                                    ? CachedNetworkImage(
+                                        imageUrl: _user_image,
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            const Icon(Icons.person),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(Icons.person),
+                                      )
+                                    : const Icon(Icons.person),
+                              ),
                             ),
                             const SizedBox(width: 20),
                             Text(

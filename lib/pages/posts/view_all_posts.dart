@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blog_site/components/date_time.dart';
 import 'package:flutter_blog_site/components/navbar.dart';
@@ -56,9 +57,7 @@ class _ViewPostsState extends State<ViewPosts> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      fetchPosts();
-    });
+    fetchPosts();
   }
 
   @override
@@ -110,7 +109,7 @@ class _ViewPostsState extends State<ViewPosts> {
                     itemCount: posts.length,
                     itemBuilder: (context, index) {
                       final post = posts[index];
-
+                      final imageUrl = post['user_image'];
                       return Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 700),
@@ -130,41 +129,27 @@ class _ViewPostsState extends State<ViewPosts> {
                                 children: [
                                   Row(
                                     children: [
-                                      FutureBuilder<String?>(
-                                        future: FetchAllUserPhoto(
-                                          post['user_id'],
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.grey[200],
+                                        child: ClipOval(
+                                          child: imageUrl != null
+                                              ? CachedNetworkImage(
+                                                  imageUrl: imageUrl,
+                                                  width: 40,
+                                                  height: 40,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) =>
+                                                      const Icon(Icons.person),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          const Icon(
+                                                            Icons.person,
+                                                          ),
+                                                )
+                                              : const Icon(Icons.person),
                                         ),
-                                        builder: (context, snapshot) {
-                                          // if (snapshot.connectionState ==
-                                          //     ConnectionState.waiting) {
-                                          //   return const CircleAvatar(
-                                          //     radius: 20,
-                                          //     child: CircularProgressIndicator(
-                                          //       strokeWidth: 2,
-                                          //     ),
-                                          //   );
-                                          // }
-
-                                          if (snapshot.hasData &&
-                                              snapshot.data != null) {
-                                            return CircleAvatar(
-                                              radius: 20,
-                                              backgroundImage: NetworkImage(
-                                                snapshot.data!,
-                                              ),
-                                            );
-                                          }
-
-                                          return const CircleAvatar(
-                                            radius: 20,
-                                            child: Icon(Icons.person),
-                                          );
-                                        },
                                       ),
-                                      // CircleAvatar(
-                                      //   radius: 18,
-                                      //   child: Icon(Icons.person),
-                                      // ),
                                       const SizedBox(width: 10),
                                       Text(
                                         post['author'] ?? 'Unknown',
@@ -231,28 +216,6 @@ class _ViewPostsState extends State<ViewPosts> {
                                   ),
 
                                   const SizedBox(height: 8),
-                                  // if (post['image'] != null)
-                                  //   Center(
-                                  //     child: ConstrainedBox(
-                                  //       constraints: const BoxConstraints(
-                                  //         minHeight: 200,
-                                  //         maxHeight: 300,
-                                  //       ),
-                                  //       child: AspectRatio(
-                                  //         aspectRatio: 1,
-                                  //         child: Container(
-                                  //           decoration: BoxDecoration(
-                                  //             image: DecorationImage(
-                                  //               image: NetworkImage(
-                                  //                 post['image'],
-                                  //               ),
-                                  //               fit: BoxFit.cover,
-                                  //             ),
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                  //     ),
-                                  //   ),
                                   displayAllImageInAPost(post),
                                   const SizedBox(height: 10),
                                   Text(
